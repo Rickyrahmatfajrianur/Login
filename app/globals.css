@@ -31,6 +31,16 @@ input, textarea, select{ font-family:inherit; }
 .field{ display:flex; flex-direction:column; gap:6px; }
 .field label{ font-size:13px; font-weight:600; color:var(--slate600); }
 .field input{ border:1.5px solid var(--slate200); border-radius:10px; padding:11px 13px; font-size:14px; }
+.password-input-wrap{ position:relative; }
+.password-input-wrap input{ width:100%; padding-right:42px; }
+.btn-toggle-password{
+  position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  background:none; border:none; padding:8px; display:flex; align-items:center; justify-content:center;
+  color:var(--slate400); border-radius:8px;
+}
+.btn-toggle-password:hover{ color:var(--slate600); background:var(--slate50); }
+.btn-toggle-password svg{ width:18px; height:18px; }
+.login-footer-text{ text-align:center; margin-top:20px; font-size:12px; color:rgba(255,255,255,0.65); }
 .field input:focus{ outline:none; border-color:var(--b600); }
 .btn-primary{
   background:var(--b600); color:#fff; border:none; border-radius:11px; padding:12px; font-weight:700; font-size:14.5px;
@@ -157,6 +167,8 @@ h1,h2,h3{ font-family:'Sora',sans-serif; margin:0; }
 .btn-back:hover{ color:var(--b600); }
 
 .dash-main{ max-width:1180px; margin:0 auto; padding:24px; }
+.dash-footer{ text-align:center; padding:20px 24px 28px; }
+.dash-footer p{ font-size:12px; color:var(--slate400); margin:0; }
 
 .setup-banner{
   display:flex; gap:12px; background:#FFF8EC; border:1px solid #F5DFAF; border-radius:14px;

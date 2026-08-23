@@ -16,6 +16,9 @@ export default function DashboardLayout({ title, tag = "Internal", headerRight, 
           <div className="dash-header-right">{headerRight}</div>
         </header>
         <main className="dash-main">{children}</main>
+        <footer className="dash-footer">
+          <p>© 2026 Taniku Agro</p>
+        </footer>
       </div>
     </div>
   );
