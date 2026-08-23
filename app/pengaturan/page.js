@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { createClient } from "@/lib/supabase/client";
+import { ACCESS_PAGES } from "@/lib/permissions";
 
 export default function PengaturanPage() {
   const [form, setForm] = useState({
@@ -18,11 +19,17 @@ export default function PengaturanPage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
+  const [newUserPages, setNewUserPages] = useState([]); // checklist izin akun baru
   const [userMsg, setUserMsg] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
 
-  // Konfirmasi password sebelum tambah/hapus pengguna
-  const [confirmAction, setConfirmAction] = useState(null); // { type: 'add'|'delete', payload }
+  // Edit izin akses akun yang sudah ada
+  const [editingAccessUser, setEditingAccessUser] = useState(null); // { id, email, allowed_pages }
+  const [editPages, setEditPages] = useState([]);
+  const [savingAccess, setSavingAccess] = useState(false);
+
+  // Konfirmasi password sebelum tambah/hapus/ubah izin pengguna
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'add'|'delete'|'editAccess', payload }
   const [confirmPassword, setConfirmPassword] = useState("");
   const [confirmError, setConfirmError] = useState("");
   const [confirming, setConfirming] = useState(false);
@@ -48,9 +55,13 @@ export default function PengaturanPage() {
   function handleAddUser(e) {
     e.preventDefault();
     if (!newUserEmail || !newUserPassword) return;
+    if (newUserPages.length === 0) {
+      setUserMsg({ type: "error", text: "Pilih minimal 1 halaman yang boleh diakses." });
+      return;
+    }
     setConfirmError("");
     setConfirmPassword("");
-    setConfirmAction({ type: "add", payload: { email: newUserEmail, password: newUserPassword } });
+    setConfirmAction({ type: "add", payload: { email: newUserEmail, password: newUserPassword, allowedPages: newUserPages } });
   }
 
   function handleDeleteUser(id, email) {
@@ -59,7 +70,18 @@ export default function PengaturanPage() {
     setConfirmAction({ type: "delete", payload: { id, email } });
   }
 
-  // Langkah 2: setelah password dikonfirmasi benar, baru eksekusi tambah/hapus
+  function openEditAccess(u) {
+    setEditingAccessUser(u);
+    setEditPages(Array.isArray(u.allowed_pages) ? u.allowed_pages : []);
+  }
+
+  function handleSaveAccess() {
+    setConfirmError("");
+    setConfirmPassword("");
+    setConfirmAction({ type: "editAccess", payload: { id: editingAccessUser.id, email: editingAccessUser.email, allowedPages: editPages } });
+  }
+
+  // Langkah 2: setelah password dikonfirmasi benar, baru eksekusi tambah/hapus/ubah izin
   async function handleConfirmPassword(e) {
     e.preventDefault();
     setConfirming(true);
@@ -90,6 +112,8 @@ export default function PengaturanPage() {
         await executeAddUser(confirmAction.payload);
       } else if (confirmAction.type === "delete") {
         await executeDeleteUser(confirmAction.payload);
+      } else if (confirmAction.type === "editAccess") {
+        await executeEditAccess(confirmAction.payload);
       }
 
       setConfirmAction(null);
@@ -100,14 +124,14 @@ export default function PengaturanPage() {
     setConfirming(false);
   }
 
-  async function executeAddUser({ email, password }) {
+  async function executeAddUser({ email, password, allowedPages }) {
     setAddingUser(true);
     setUserMsg(null);
     try {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, allowedPages }),
       });
       const data = await res.json();
 
@@ -117,6 +141,7 @@ export default function PengaturanPage() {
         setUserMsg({ type: "ok", text: `Pengguna ${data.user.email} berhasil ditambahkan.` });
         setNewUserEmail("");
         setNewUserPassword("");
+        setNewUserPages([]);
         setShowAddUser(false);
         loadUsers();
       }
@@ -139,6 +164,28 @@ export default function PengaturanPage() {
     } catch (err) {
       setUserMsg({ type: "error", text: "Terjadi kesalahan. Coba lagi." });
     }
+  }
+
+  async function executeEditAccess({ id, email, allowedPages }) {
+    setSavingAccess(true);
+    try {
+      const res = await fetch("/api/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, allowedPages }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUserMsg({ type: "error", text: data.error || "Gagal mengubah izin akses." });
+      } else {
+        setUserMsg({ type: "ok", text: `Izin akses ${email} berhasil diperbarui.` });
+        setEditingAccessUser(null);
+        loadUsers();
+      }
+    } catch (err) {
+      setUserMsg({ type: "error", text: "Terjadi kesalahan. Coba lagi." });
+    }
+    setSavingAccess(false);
   }
 
   async function loadSettings() {
@@ -284,33 +331,47 @@ export default function PengaturanPage() {
         )}
 
         {showAddUser && (
-          <form onSubmit={handleAddUser} style={{ display: "flex", gap: 10, alignItems: "flex-end", marginBottom: 18, flexWrap: "wrap" }}>
-            <div className="field" style={{ flex: 1, minWidth: 180 }}>
-              <label>Email</label>
-              <input type="email" required value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} placeholder="staf@tanikuagro.com" />
+          <form onSubmit={handleAddUser} style={{ marginBottom: 18 }}>
+            <div style={{ display: "flex", gap: 10, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 14 }}>
+              <div className="field" style={{ flex: 1, minWidth: 180 }}>
+                <label>Email</label>
+                <input type="email" required value={newUserEmail} onChange={(e) => setNewUserEmail(e.target.value)} placeholder="staf@tanikuagro.com" />
+              </div>
+              <div className="field" style={{ flex: 1, minWidth: 180 }}>
+                <label>Password Awal</label>
+                <input type="text" required minLength={6} value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} placeholder="Minimal 6 karakter" />
+              </div>
             </div>
-            <div className="field" style={{ flex: 1, minWidth: 180 }}>
-              <label>Password Awal</label>
-              <input type="text" required minLength={6} value={newUserPassword} onChange={(e) => setNewUserPassword(e.target.value)} placeholder="Minimal 6 karakter" />
+
+            <div className="field" style={{ marginBottom: 14 }}>
+              <label>Halaman yang boleh diakses (centang minimal 1 — kosong berarti akun tidak bisa akses halaman apa pun)</label>
+              <PageChecklist selected={newUserPages} onChange={setNewUserPages} />
             </div>
+
             <button type="submit" className="btn-primary" disabled={addingUser} style={{ height: 42 }}>
-              {addingUser ? "Menambah..." : "Tambah"}
+              {addingUser ? "Menambah..." : "Tambah Pengguna"}
             </button>
           </form>
         )}
 
         <table>
           <thead>
-            <tr><th>Email</th><th>Login Terakhir</th><th style={{ width: 90 }}>Aksi</th></tr>
+            <tr><th>Email</th><th>Akses</th><th>Login Terakhir</th><th style={{ width: 150 }}>Aksi</th></tr>
           </thead>
           <tbody>
-            {usersLoading && <tr><td colSpan={3} className="loading-row">Memuat...</td></tr>}
-            {!usersLoading && users.length === 0 && <tr><td colSpan={3} className="empty-row">Belum ada pengguna.</td></tr>}
+            {usersLoading && <tr><td colSpan={4} className="loading-row">Memuat...</td></tr>}
+            {!usersLoading && users.length === 0 && <tr><td colSpan={4} className="empty-row">Belum ada pengguna.</td></tr>}
             {!usersLoading && users.map((u) => (
               <tr key={u.id}>
                 <td className="prod-name">{u.email}</td>
+                <td style={{ fontSize: 12, color: "var(--ink-faint)" }}>
+                  {Array.isArray(u.allowed_pages)
+                    ? (u.allowed_pages.length === 0 ? "Tidak ada akses" : u.allowed_pages.map((k) => ACCESS_PAGES.find((p) => p.key === k)?.label || k).join(", "))
+                    : "Owner (akses penuh)"}
+                </td>
                 <td>{u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString("id-ID") : "Belum pernah login"}</td>
                 <td>
+                  <button className="btn-edit" onClick={() => openEditAccess(u)}>Edit Akses</button>
                   <button className="btn-delete" onClick={() => handleDeleteUser(u.id, u.email)}>Hapus</button>
                 </td>
               </tr>
@@ -408,6 +469,47 @@ export default function PengaturanPage() {
           </div>
         </div>
       )}
+
+      {editingAccessUser && (
+        <div className="modal-overlay" onClick={() => !savingAccess && setEditingAccessUser(null)}>
+          <div className="modal-card" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
+            <h2>Edit Akses — {editingAccessUser.email}</h2>
+            <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: -8, marginBottom: 18 }}>
+              Centang minimal 1 halaman. Kosong berarti akun ini tidak bisa akses halaman apa pun (login tapi mentok).
+            </p>
+            <PageChecklist selected={editPages} onChange={setEditPages} />
+            <div className="modal-actions" style={{ marginTop: 18 }}>
+              <button type="button" className="btn-cancel" disabled={savingAccess} onClick={() => setEditingAccessUser(null)}>
+                Batal
+              </button>
+              <button type="button" className="btn-primary" disabled={savingAccess} onClick={handleSaveAccess}>
+                {savingAccess ? "Menyimpan..." : "Simpan Akses"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
+  );
+}
+
+function PageChecklist({ selected, onChange }) {
+  function toggle(key) {
+    if (selected.includes(key)) {
+      onChange(selected.filter((k) => k !== key));
+    } else {
+      onChange([...selected, key]);
+    }
+  }
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px 16px", background: "var(--paper)", borderRadius: 10, padding: 14 }}>
+      {ACCESS_PAGES.map((p) => (
+        <label key={p.key} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer" }}>
+          <input type="checkbox" checked={selected.includes(p.key)} onChange={() => toggle(p.key)} />
+          {p.label}
+        </label>
+      ))}
+    </div>
   );
 }

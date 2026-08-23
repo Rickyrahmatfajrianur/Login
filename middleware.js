@@ -28,6 +28,7 @@ export async function middleware(request) {
   } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname.startsWith("/login");
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api");
 
   // Belum login & bukan di halaman login -> lempar ke halaman login
   if (!user && !isLoginPage) {
@@ -36,11 +37,24 @@ export async function middleware(request) {
     return NextResponse.redirect(url);
   }
 
-  // Sudah login tapi masih di halaman login -> lempar ke Master Produk
+  // Sudah login tapi masih di halaman login -> lempar ke Dashboard
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/ringkasan";
     return NextResponse.redirect(url);
+  }
+
+  // ===== Cek izin akses per halaman (kalau akun ini dibatasi) =====
+  if (user && !isLoginPage && !isApiRoute) {
+    const allowedPages = user.app_metadata?.allowed_pages; // undefined = pemilik, akses penuh
+    if (Array.isArray(allowedPages)) {
+      const pathSegment = request.nextUrl.pathname.split("/")[1];
+      if (pathSegment && !allowedPages.includes(pathSegment)) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/" + (allowedPages[0] || "produk");
+        return NextResponse.redirect(url);
+      }
+    }
   }
 
   return supabaseResponse;
