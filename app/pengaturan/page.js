@@ -21,6 +21,12 @@ export default function PengaturanPage() {
   const [userMsg, setUserMsg] = useState(null);
   const [addingUser, setAddingUser] = useState(false);
 
+  // Konfirmasi password sebelum tambah/hapus pengguna
+  const [confirmAction, setConfirmAction] = useState(null); // { type: 'add'|'delete', payload }
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmError, setConfirmError] = useState("");
+  const [confirming, setConfirming] = useState(false);
+
   useEffect(() => {
     loadSettings();
     loadUsers();
@@ -38,16 +44,70 @@ export default function PengaturanPage() {
     setUsersLoading(false);
   }
 
-  async function handleAddUser(e) {
+  // Langkah 1: minta konfirmasi password dulu, belum eksekusi apa pun
+  function handleAddUser(e) {
     e.preventDefault();
+    if (!newUserEmail || !newUserPassword) return;
+    setConfirmError("");
+    setConfirmPassword("");
+    setConfirmAction({ type: "add", payload: { email: newUserEmail, password: newUserPassword } });
+  }
+
+  function handleDeleteUser(id, email) {
+    setConfirmError("");
+    setConfirmPassword("");
+    setConfirmAction({ type: "delete", payload: { id, email } });
+  }
+
+  // Langkah 2: setelah password dikonfirmasi benar, baru eksekusi tambah/hapus
+  async function handleConfirmPassword(e) {
+    e.preventDefault();
+    setConfirming(true);
+    setConfirmError("");
+
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser?.email) {
+        setConfirmError("Sesi login tidak ditemukan. Silakan login ulang.");
+        setConfirming(false);
+        return;
+      }
+
+      // Verifikasi password dengan mencoba login ulang pakai akun yang sedang aktif
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: currentUser.email,
+        password: confirmPassword,
+      });
+
+      if (authError) {
+        setConfirmError("Password salah. Silakan coba lagi.");
+        setConfirming(false);
+        return;
+      }
+
+      // Password benar, lanjutkan aksi yang tertunda
+      if (confirmAction.type === "add") {
+        await executeAddUser(confirmAction.payload);
+      } else if (confirmAction.type === "delete") {
+        await executeDeleteUser(confirmAction.payload);
+      }
+
+      setConfirmAction(null);
+      setConfirmPassword("");
+    } catch (err) {
+      setConfirmError("Terjadi kesalahan. Coba lagi.");
+    }
+    setConfirming(false);
+  }
+
+  async function executeAddUser({ email, password }) {
     setAddingUser(true);
     setUserMsg(null);
-
     try {
       const res = await fetch("/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newUserEmail, password: newUserPassword }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
 
@@ -66,14 +126,14 @@ export default function PengaturanPage() {
     setAddingUser(false);
   }
 
-  async function handleDeleteUser(id, email) {
-    if (!confirm(`Yakin ingin menghapus akun ${email}?`)) return;
+  async function executeDeleteUser({ id, email }) {
     try {
       const res = await fetch(`/api/users?id=${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok) {
         setUserMsg({ type: "error", text: data.error || "Gagal menghapus pengguna." });
       } else {
+        setUserMsg({ type: "ok", text: `Akun ${email} berhasil dihapus.` });
         loadUsers();
       }
     } catch (err) {
@@ -305,6 +365,49 @@ export default function PengaturanPage() {
           </tbody>
         </table>
       </div>
+
+      {confirmAction && (
+        <div className="modal-overlay" onClick={() => !confirming && setConfirmAction(null)}>
+          <div className="modal-card" style={{ maxWidth: 380 }} onClick={(e) => e.stopPropagation()}>
+            <h2>🔒 Konfirmasi Password</h2>
+            <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: -8, marginBottom: 18 }}>
+              {confirmAction.type === "add"
+                ? `Masukkan password kamu untuk menambahkan akun ${confirmAction.payload.email}.`
+                : `Masukkan password kamu untuk menghapus akun ${confirmAction.payload.email}.`}
+            </p>
+
+            <form className="modal-form" onSubmit={handleConfirmPassword}>
+              {confirmError && <div className="error-msg">{confirmError}</div>}
+
+              <div className="field">
+                <label>Password Kamu</label>
+                <input
+                  type="password"
+                  required
+                  autoFocus
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" disabled={confirming} onClick={() => setConfirmAction(null)}>
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={confirming}
+                  style={confirmAction.type === "delete" ? { background: "var(--rust)" } : {}}
+                >
+                  {confirming ? "Memverifikasi..." : confirmAction.type === "add" ? "Konfirmasi & Tambah" : "Konfirmasi & Hapus"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
