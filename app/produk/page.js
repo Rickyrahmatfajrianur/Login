@@ -1,0 +1,307 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+
+const CATEGORIES = [
+  { id: "herbisida", label: "Herbisida" },
+  { id: "fungisida", label: "Fungisida" },
+  { id: "insektisida", label: "Insektisida" },
+  { id: "akarisida", label: "Akarisida" },
+  { id: "nematisida", label: "Nematisida" },
+  { id: "moluskisida", label: "Moluskisida" },
+  { id: "rodentisida", label: "Rodentisida" },
+  { id: "bakterisida", label: "Bakterisida" },
+  { id: "zpt", label: "ZPT" },
+  { id: "perekat", label: "Perekat & Surfaktan" },
+  { id: "pupuk", label: "Pupuk" },
+  { id: "benih", label: "Benih" },
+  { id: "biopestisida", label: "Biopestisida" },
+  { id: "alat", label: "Alat Pertanian" },
+  { id: "sparepart", label: "Spare Part" },
+  { id: "lainnya", label: "Lainnya" },
+];
+
+const emptyForm = {
+  id: "",
+  name: "",
+  cat: "herbisida",
+  size: "",
+  img: "",
+  description: "",
+  active_ingredient: "",
+  target: "",
+  long_desc: "",
+};
+
+export default function ProdukPage() {
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  async function loadProducts() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("name", { ascending: true });
+
+    if (!error) setProducts(data || []);
+    setLoading(false);
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    router.push("/login");
+    router.refresh();
+  }
+
+  function openAddModal() {
+    setEditingId(null);
+    setForm(emptyForm);
+    setErrorMsg("");
+    setShowModal(true);
+  }
+
+  function openEditModal(p) {
+    setEditingId(p.id);
+    setForm({
+      id: p.id,
+      name: p.name || "",
+      cat: p.cat || "herbisida",
+      size: p.size || "",
+      img: p.img || "",
+      description: p.description || "",
+      active_ingredient: p.active_ingredient || "",
+      target: p.target || "",
+      long_desc: p.long_desc || "",
+    });
+    setErrorMsg("");
+    setShowModal(true);
+  }
+
+  async function handleSave(e) {
+    e.preventDefault();
+    setSaving(true);
+    setErrorMsg("");
+
+    if (!form.id || !form.name) {
+      setErrorMsg("ID dan Nama Produk wajib diisi.");
+      setSaving(false);
+      return;
+    }
+
+    let result;
+    if (editingId) {
+      result = await supabase.from("products").update(form).eq("id", editingId);
+    } else {
+      result = await supabase.from("products").insert(form);
+    }
+
+    setSaving(false);
+
+    if (result.error) {
+      setErrorMsg("Gagal menyimpan: " + result.error.message);
+      return;
+    }
+
+    setShowModal(false);
+    loadProducts();
+  }
+
+  async function handleDelete(id) {
+    if (!confirm("Yakin ingin menghapus produk ini?")) return;
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (!error) loadProducts();
+  }
+
+  const filtered = products.filter((p) =>
+    p.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div>
+      <header className="admin-header">
+        <h1>📦 Master Produk — Taniku Agro</h1>
+        <button className="btn-logout" onClick={handleLogout}>
+          Keluar
+        </button>
+      </header>
+
+      <main className="admin-main">
+        <div className="toolbar">
+          <input
+            type="text"
+            placeholder="Cari produk..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button className="btn-add" onClick={openAddModal}>
+            + Tambah Produk
+          </button>
+        </div>
+
+        <div className="produk-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Produk</th>
+                <th>Kategori</th>
+                <th>Ukuran</th>
+                <th style={{ width: 120 }}>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: 30 }}>
+                    Memuat data...
+                  </td>
+                </tr>
+              )}
+              {!loading && filtered.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: "center", padding: 30 }}>
+                    Tidak ada produk yang cocok.
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                filtered.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.name}</td>
+                    <td>{CATEGORIES.find((c) => c.id === p.cat)?.label || p.cat}</td>
+                    <td>{p.size || "-"}</td>
+                    <td>
+                      <button className="btn-edit" onClick={() => openEditModal(p)}>
+                        Edit
+                      </button>
+                      <button className="btn-delete" onClick={() => handleDelete(p.id)}>
+                        Hapus
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </main>
+
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingId ? "Edit Produk" : "Tambah Produk Baru"}</h2>
+
+            <form className="modal-form" onSubmit={handleSave}>
+              {errorMsg && <div className="error-msg">{errorMsg}</div>}
+
+              <div className="field">
+                <label>ID Unik (huruf kecil, tanpa spasi, misal: emacel-100)</label>
+                <input
+                  value={form.id}
+                  disabled={!!editingId}
+                  onChange={(e) => setForm({ ...form, id: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label>Nama Produk</label>
+                <input
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label>Kategori</label>
+                <select
+                  value={form.cat}
+                  onChange={(e) => setForm({ ...form, cat: e.target.value })}
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="field">
+                <label>Ukuran / Kemasan</label>
+                <input
+                  value={form.size}
+                  onChange={(e) => setForm({ ...form, size: e.target.value })}
+                  placeholder="misal: 100 ml"
+                />
+              </div>
+
+              <div className="field">
+                <label>Path Foto (misal: images/produk/nama-file.webp)</label>
+                <input
+                  value={form.img}
+                  onChange={(e) => setForm({ ...form, img: e.target.value })}
+                />
+              </div>
+
+              <div className="field">
+                <label>Deskripsi Singkat (tampil di kartu produk)</label>
+                <input
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                />
+              </div>
+
+              <div className="field">
+                <label>Bahan Aktif</label>
+                <input
+                  value={form.active_ingredient}
+                  onChange={(e) => setForm({ ...form, active_ingredient: e.target.value })}
+                />
+              </div>
+
+              <div className="field">
+                <label>Target / Sasaran</label>
+                <input
+                  value={form.target}
+                  onChange={(e) => setForm({ ...form, target: e.target.value })}
+                />
+              </div>
+
+              <div className="field">
+                <label>Deskripsi Lengkap (tampil di halaman detail)</label>
+                <textarea
+                  rows={4}
+                  value={form.long_desc}
+                  onChange={(e) => setForm({ ...form, long_desc: e.target.value })}
+                />
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn-primary" disabled={saving}>
+                  {saving ? "Menyimpan..." : "Simpan"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
