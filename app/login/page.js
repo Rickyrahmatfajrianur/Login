@@ -22,7 +22,7 @@ export default function LoginPage() {
     setLoading(false);
 
     if (error) {
-      setError("Email atau password salah. Silakan coba lagi.");
+      setError("Gagal login: " + error.message);
       return;
     }
 
