@@ -95,38 +95,18 @@ export default function SupplierPage() {
         </>
       }
     >
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
+      <div className="stat-row">
+        <div className="stat-cell">
           <div className="lbl">Total Supplier</div>
           <div className="val">{suppliers.length || "–"}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-            </svg>
-          </div>
+        <div className="stat-cell">
           <div className="lbl">Total Transaksi</div>
           <div className="val">{totalTransaksi}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
+        <div className="stat-cell accent">
           <div className="lbl">Total Nilai Pembelian</div>
-          <div className="val" style={{ fontSize: 18 }}>{formatRupiah(totalNilai)}</div>
+          <div className="val small">{formatRupiah(totalNilai)}</div>
         </div>
       </div>
 

@@ -93,46 +93,22 @@ export default function StokBarangPage() {
         </>
       }
     >
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-            </svg>
-          </div>
+      <div className="stat-row">
+        <div className="stat-cell">
           <div className="lbl">Total Produk</div>
           <div className="val">{stockData.length || "–"}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
+        <div className="stat-cell">
           <div className="lbl">Stok Aman</div>
-          <div className="val">{aman}</div>
+          <div className="val" style={{ color: "var(--sage)" }}>{aman}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          </div>
+        <div className="stat-cell warn">
           <div className="lbl">Stok Menipis</div>
           <div className="val">{menipis}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-red">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="15" y1="9" x2="9" y2="15" />
-              <line x1="9" y1="9" x2="15" y2="15" />
-            </svg>
-          </div>
+        <div className="stat-cell">
           <div className="lbl">Stok Habis</div>
-          <div className="val">{habis}</div>
+          <div className="val" style={{ color: "var(--rust)" }}>{habis}</div>
         </div>
       </div>
 

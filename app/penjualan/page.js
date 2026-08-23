@@ -84,34 +84,18 @@ export default function PenjualanPage() {
         </>
       }
     >
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 19V5M5 12l7-7 7 7" />
-            </svg>
-          </div>
+      <div className="stat-row">
+        <div className="stat-cell">
           <div className="lbl">Total Transaksi</div>
           <div className="val">{data.length || "–"}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
+        <div className="stat-cell accent">
           <div className="lbl">Total Penjualan</div>
-          <div className="val" style={{ fontSize: 17 }}>{formatRupiah(totalNilai)}</div>
+          <div className="val small">{formatRupiah(totalNilai)}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20V10M18 20V4M6 20v-4" />
-            </svg>
-          </div>
+        <div className="stat-cell profit">
           <div className="lbl">Total Profit</div>
-          <div className="val" style={{ fontSize: 17 }}>{formatRupiah(totalProfit)}</div>
+          <div className="val small">{formatRupiah(totalProfit)}</div>
         </div>
       </div>
 

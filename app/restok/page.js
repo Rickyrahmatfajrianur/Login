@@ -86,45 +86,22 @@ export default function RestokPage() {
         </>
       }
     >
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <path d="M14 2v6h6" />
-            </svg>
-          </div>
+      <div className="stat-row fin">
+        <div className="stat-cell">
           <div className="lbl">Total Transaksi</div>
           <div className="val">{data.length || "–"}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-green">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M19 12l-7 7-7-7" />
-            </svg>
-          </div>
+        <div className="stat-cell">
           <div className="lbl">Total Barang Masuk</div>
           <div className="val">{data.reduce((s, p) => s + (parseFloat(p.banyak) || 0), 0)}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-blue">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" />
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-            </svg>
-          </div>
+        <div className="stat-cell accent">
           <div className="lbl">Total Nilai Pembelian</div>
-          <div className="val" style={{ fontSize: 18 }}>{formatRupiah(totalNilai)}</div>
+          <div className="val small">{formatRupiah(totalNilai)}</div>
         </div>
-        <div className="stat-card">
-          <div className="ic-circle ic-amber">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-          </div>
+        <div className="stat-cell">
           <div className="lbl">Restok Terakhir</div>
-          <div className="val" style={{ fontSize: 16 }}>{terakhir}</div>
+          <div className="val small">{terakhir}</div>
         </div>
       </div>
 
