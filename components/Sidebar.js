@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { href: "/restok", label: "Stok Masuk", icon: "M12 5v14M19 12l-7 7-7-7" },
   { href: "/penjualan", label: "Stok Keluar / Penjualan", icon: "M12 19V5M5 12l7-7 7 7" },
   { href: "/supplier", label: "Supplier", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
+  { href: "/laporan", label: "Laporan", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
   { href: "/pengaturan", label: "Pengaturan", icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
 ];
 
