@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/DashboardLayout";
 import { createClient } from "@/lib/supabase/client";
 
 const CATEGORIES = [
@@ -44,7 +44,8 @@ export default function ProdukPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const router = useRouter();
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const supabase = createClient();
 
   useEffect(() => {
@@ -62,16 +63,41 @@ export default function ProdukPage() {
     setLoading(false);
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+  async function handleFileUpload(file) {
+    if (!file) return;
+    setUploading(true);
+    setUploadError("");
+
+    // Bersihkan nama file: huruf kecil, spasi jadi strip, tambah waktu biar unik
+    const cleanName = file.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9.\-]/g, "");
+    const fileName = `${Date.now()}-${cleanName}`;
+
+    const { error } = await supabase.storage
+      .from("product-images")
+      .upload(fileName, file, { upsert: false });
+
+    if (error) {
+      setUploadError("Gagal unggah foto: " + error.message);
+      setUploading(false);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("product-images")
+      .getPublicUrl(fileName);
+
+    setForm((prev) => ({ ...prev, img: publicUrlData.publicUrl }));
+    setUploading(false);
   }
 
   function openAddModal() {
     setEditingId(null);
     setForm(emptyForm);
     setErrorMsg("");
+    setUploadError("");
     setShowModal(true);
   }
 
@@ -89,6 +115,7 @@ export default function ProdukPage() {
       long_desc: p.long_desc || "",
     });
     setErrorMsg("");
+    setUploadError("");
     setShowModal(true);
   }
 
@@ -132,28 +159,20 @@ export default function ProdukPage() {
   );
 
   return (
-    <div>
-      <header className="admin-header">
-        <h1>📦 Master Produk — Taniku Agro</h1>
-        <button className="btn-logout" onClick={handleLogout}>
-          Keluar
+    <DashboardLayout title="Master Produk">
+      <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Cari produk..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn-add" onClick={openAddModal}>
+          + Tambah Produk
         </button>
-      </header>
+      </div>
 
-      <main className="admin-main">
-        <div className="toolbar">
-          <input
-            type="text"
-            placeholder="Cari produk..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="btn-add" onClick={openAddModal}>
-            + Tambah Produk
-          </button>
-        </div>
-
-        <div className="produk-table">
+      <div className="produk-table">
           <table>
             <thead>
               <tr>
@@ -197,7 +216,6 @@ export default function ProdukPage() {
             </tbody>
           </table>
         </div>
-      </main>
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
@@ -250,11 +268,22 @@ export default function ProdukPage() {
               </div>
 
               <div className="field">
-                <label>Path Foto (misal: images/produk/nama-file.webp)</label>
+                <label>Foto Produk</label>
+                {form.img && (
+                  <img
+                    src={form.img}
+                    alt="Pratinjau"
+                    style={{ width: 120, height: 120, objectFit: "contain", background: "#F7F9FB", borderRadius: 10, border: "1px solid #DFE6EB", marginBottom: 8 }}
+                  />
+                )}
                 <input
-                  value={form.img}
-                  onChange={(e) => setForm({ ...form, img: e.target.value })}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleFileUpload(e.target.files[0])}
+                  disabled={uploading}
                 />
+                {uploading && <p style={{ fontSize: 12.5, color: "#64748B" }}>Mengunggah foto...</p>}
+                {uploadError && <p style={{ fontSize: 12.5, color: "#C53030" }}>{uploadError}</p>}
               </div>
 
               <div className="field">
@@ -302,6 +331,6 @@ export default function ProdukPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
