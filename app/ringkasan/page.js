@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import { createClient } from "@/lib/supabase/client";
 import {
   CSV_URLS,
   fetchCsvRows,
@@ -15,6 +16,8 @@ import {
   parseTanggalToDate,
   catmullRomPath,
   niceMaxScale,
+  fetchSettings,
+  DEFAULT_STOK_MIN,
 } from "@/lib/dashboardUtils";
 
 const PIE_COLORS = ["#0B6FDB", "#4F7A5C", "#B8862E", "#3D7A7A", "#A0402C"];
@@ -39,9 +42,13 @@ export default function RingkasanPage() {
   const [trend, setTrend] = useState({ points: [], maxVal: 1000000, linePath: "", areaPath: "" });
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
+  const supabase = createClient();
 
   async function loadData() {
     try {
+      const settings = await fetchSettings(supabase);
+      const minStok = settings?.stok_minimum ?? DEFAULT_STOK_MIN;
+
       const [stokRows, restokRows, penjualanRows] = await Promise.all([
         fetchCsvRows(CSV_URLS.stok),
         fetchCsvRows(CSV_URLS.restok),
@@ -64,7 +71,7 @@ export default function RingkasanPage() {
           .map((r) => {
             const nama = (r[idxNama] || "").toString().trim();
             const stok = idxTotal > -1 ? (r[idxTotal] || "0").toString().trim() : "0";
-            return { nama, stok: parseFloat(stok) || 0, status: computeStatus(stok, 5) };
+            return { nama, stok: parseFloat(stok) || 0, status: computeStatus(stok, minStok) };
           })
           .filter((p) => p.nama);
       }

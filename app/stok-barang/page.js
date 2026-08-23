@@ -2,12 +2,15 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { createClient } from "@/lib/supabase/client";
 import {
   CSV_URLS,
   fetchCsvRows,
   findHeaderRow,
   guessCategory,
   computeStatus,
+  fetchSettings,
+  DEFAULT_STOK_MIN,
 } from "@/lib/dashboardUtils";
 
 export default function StokBarangPage() {
@@ -17,9 +20,15 @@ export default function StokBarangPage() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
+  const [stokMin, setStokMin] = useState(DEFAULT_STOK_MIN);
+  const supabase = createClient();
 
   async function loadData() {
     try {
+      const settings = await fetchSettings(supabase);
+      const minStok = settings?.stok_minimum ?? DEFAULT_STOK_MIN;
+      setStokMin(minStok);
+
       const rows = await fetchCsvRows(CSV_URLS.stok);
       const headerIdx = findHeaderRow(rows, ["kode barang", "nama barang"]);
       if (headerIdx === -1) throw new Error("Kolom tidak ditemukan");
@@ -40,7 +49,7 @@ export default function StokBarangPage() {
             kategori: guessCategory(nama),
             stok,
             satuan,
-            status: computeStatus(stok, 5),
+            status: computeStatus(stok, minStok),
           };
         })
         .filter((p) => p.nama);
