@@ -26,45 +26,53 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/produk");
+    router.push("/ringkasan");
     router.refresh();
   }
 
   return (
-    <div className="login-wrap">
-      <div className="login-card">
-        <h1>Login Admin</h1>
-        <p className="sub">Taniku Agro — Panel Pengelolaan Produk</p>
+    <div className="login-hero">
+      <div
+        className="login-hero-bg"
+        style={{ backgroundImage: "url('https://tanikuagro.com/images/hero-bg.webp')" }}
+      ></div>
+      <div className="login-hero-overlay"></div>
 
-        <form className="login-form" onSubmit={handleLogin}>
-          {error && <div className="error-msg">{error}</div>}
+      <div className="login-wrap">
+        <div className="login-card">
+          <h1>Login Admin</h1>
+          <p className="sub">Taniku Agro — Panel Pengelolaan Produk</p>
 
-          <div className="field">
-            <label>Email</label>
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@tanikuagro.com"
-            />
-          </div>
+          <form className="login-form" onSubmit={handleLogin}>
+            {error && <div className="error-msg">{error}</div>}
 
-          <div className="field">
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-            />
-          </div>
+            <div className="field">
+              <label>Email</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@tanikuagro.com"
+              />
+            </div>
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? "Memproses..." : "Masuk"}
-          </button>
-        </form>
+            <div className="field">
+              <label>Password</label>
+              <input
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button type="submit" className="btn-primary" disabled={loading}>
+              {loading ? "Memproses..." : "Masuk"}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );

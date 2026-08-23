@@ -39,7 +39,7 @@ export async function middleware(request) {
   // Sudah login tapi masih di halaman login -> lempar ke Master Produk
   if (user && isLoginPage) {
     const url = request.nextUrl.clone();
-    url.pathname = "/produk";
+    url.pathname = "/ringkasan";
     return NextResponse.redirect(url);
   }
 

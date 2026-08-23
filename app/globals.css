@@ -13,8 +13,18 @@ h1,h2,h3{ font-family:'Sora',sans-serif; margin:0; }
 button{ font-family:inherit; cursor:pointer; }
 input, textarea, select{ font-family:inherit; }
 
-.login-wrap{ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-.login-card{ background:#fff; border-radius:20px; padding:36px; max-width:400px; width:100%; box-shadow:0 20px 50px rgba(11,42,68,0.12); }
+/* ===== Login: foto latar + overlay biru ===== */
+.login-hero{ position:relative; min-height:100vh; overflow:hidden; }
+.login-hero-bg{
+  position:absolute; inset:0; z-index:0;
+  background-size:cover; background-position:center 35%;
+}
+.login-hero-overlay{
+  position:absolute; inset:0; z-index:0;
+  background:linear-gradient(115deg, rgba(11,42,68,0.92) 0%, rgba(11,42,68,0.82) 40%, rgba(11,111,219,0.55) 100%);
+}
+.login-wrap{ position:relative; z-index:1; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+.login-card{ background:#fff; border-radius:20px; padding:36px; max-width:400px; width:100%; box-shadow:0 24px 60px rgba(0,0,0,0.35); }
 .login-card h1{ font-size:22px; text-align:center; }
 .login-card p.sub{ text-align:center; color:var(--slate400); font-size:13.5px; margin-top:6px; }
 .login-form{ margin-top:24px; display:flex; flex-direction:column; gap:14px; }

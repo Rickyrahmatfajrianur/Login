@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import DashboardLayout from "@/components/DashboardLayout";
 import { createClient } from "@/lib/supabase/client";
 
 const CATEGORIES = [
@@ -46,7 +46,6 @@ export default function ProdukPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
@@ -62,12 +61,6 @@ export default function ProdukPage() {
 
     if (!error) setProducts(data || []);
     setLoading(false);
-  }
-
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
   }
 
   async function handleFileUpload(file) {
@@ -166,28 +159,20 @@ export default function ProdukPage() {
   );
 
   return (
-    <div>
-      <header className="admin-header">
-        <h1>📦 Master Produk — Taniku Agro</h1>
-        <button className="btn-logout" onClick={handleLogout}>
-          Keluar
+    <DashboardLayout title="Master Produk">
+      <div className="toolbar">
+        <input
+          type="text"
+          placeholder="Cari produk..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <button className="btn-add" onClick={openAddModal}>
+          + Tambah Produk
         </button>
-      </header>
+      </div>
 
-      <main className="admin-main">
-        <div className="toolbar">
-          <input
-            type="text"
-            placeholder="Cari produk..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <button className="btn-add" onClick={openAddModal}>
-            + Tambah Produk
-          </button>
-        </div>
-
-        <div className="produk-table">
+      <div className="produk-table">
           <table>
             <thead>
               <tr>
@@ -231,7 +216,6 @@ export default function ProdukPage() {
             </tbody>
           </table>
         </div>
-      </main>
 
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
@@ -347,6 +331,6 @@ export default function ProdukPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardLayout>
   );
 }
