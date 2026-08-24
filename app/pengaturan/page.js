@@ -8,6 +8,7 @@ import { ACCESS_PAGES } from "@/lib/permissions";
 export default function PengaturanPage() {
   const [form, setForm] = useState({
     nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5, show_real_price: false,
+    hero_heading: "", hero_lede: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -200,6 +201,8 @@ export default function PengaturanPage() {
         metode_pembayaran: data.metode_pembayaran || "",
         stok_minimum: data.stok_minimum ?? 5,
         show_real_price: data.show_real_price ?? false,
+        hero_heading: data.hero_heading || "",
+        hero_lede: data.hero_lede || "",
       });
     } else {
       setMessage({ type: "error", text: "Tabel pengaturan belum ditemukan. Pastikan sudah menjalankan settings-schema.sql di Supabase." });
@@ -222,6 +225,8 @@ export default function PengaturanPage() {
         metode_pembayaran: form.metode_pembayaran,
         stok_minimum: parseInt(form.stok_minimum, 10) || 5,
         show_real_price: form.show_real_price,
+        hero_heading: form.hero_heading,
+        hero_lede: form.hero_lede,
       })
       .eq("id", 1);
 
@@ -297,6 +302,36 @@ export default function PengaturanPage() {
             Kalau dimatikan (belum dicentang), website hanya menampilkan format seperti &quot;Rp XX.XXX&quot; — bukan harga sebenarnya.
             Kamu bisa nyalakan/matikan ini kapan saja tanpa perlu ubah kode. Harga tiap produk diatur di halaman Master Produk.
           </p>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <div className="panel-head"><h3>✍️ Teks Hero Beranda</h3></div>
+          <div className="field" style={{ marginBottom: 14 }}>
+            <label>Judul Utama</label>
+            <textarea
+              rows={2}
+              value={form.hero_heading}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, hero_heading: e.target.value })}
+              placeholder="Sarana Pertanian Terlengkap, dari Taniku Agro untuk petani"
+              style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
+            />
+            <p style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 6 }}>
+              Kata terakhir setelah ini (Hebat/Maju/Tangguh/Sejahtera) akan tetap muncul otomatis bergantian di website — tidak perlu ditulis di sini.
+              Tulisan &quot;Taniku Agro&quot; akan otomatis tampil dengan warna aksen kalau ditulis persis begitu.
+            </p>
+          </div>
+          <div className="field">
+            <label>Deskripsi di Bawah Judul</label>
+            <textarea
+              rows={3}
+              value={form.hero_lede}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, hero_lede: e.target.value })}
+              placeholder="Herbisida, fungisida, insektisida, dan kebutuhan tani lainnya..."
+              style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
+            />
+          </div>
         </div>
 
         <div className="panel" style={{ marginBottom: 16 }}>
