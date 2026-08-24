@@ -23,6 +23,15 @@ const CATEGORIES = [
   { id: "lainnya", label: "Lainnya" },
 ];
 
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
 const emptyForm = {
   id: "",
   name: "",
@@ -48,6 +57,7 @@ export default function ProdukPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [idEditedManually, setIdEditedManually] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -100,6 +110,7 @@ export default function ProdukPage() {
     setForm(emptyForm);
     setErrorMsg("");
     setUploadError("");
+    setIdEditedManually(false);
     setShowModal(true);
   }
 
@@ -252,11 +263,14 @@ export default function ProdukPage() {
               {errorMsg && <div className="error-msg">{errorMsg}</div>}
 
               <div className="field">
-                <label>ID Unik (huruf kecil, tanpa spasi, misal: emacel-100)</label>
+                <label>ID Unik {!editingId && <span style={{ fontWeight: 400, color: "var(--ink-faint)" }}>(otomatis dari Nama Produk, bisa diubah kalau perlu)</span>}</label>
                 <input
                   value={form.id}
                   disabled={!!editingId}
-                  onChange={(e) => setForm({ ...form, id: e.target.value })}
+                  onChange={(e) => {
+                    setIdEditedManually(true);
+                    setForm({ ...form, id: e.target.value });
+                  }}
                   required
                 />
               </div>
@@ -265,7 +279,14 @@ export default function ProdukPage() {
                 <label>Nama Produk</label>
                 <input
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      name,
+                      id: !editingId && !idEditedManually ? slugify(name) : prev.id,
+                    }));
+                  }}
                   required
                 />
               </div>
