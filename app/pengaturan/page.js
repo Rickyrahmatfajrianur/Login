@@ -448,9 +448,23 @@ export default function PengaturanPage() {
       </div>
 
       {confirmAction && (
-        <div className="modal-overlay" onClick={() => !confirming && setConfirmAction(null)}>
+        <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: 380 }} onClick={(e) => e.stopPropagation()}>
-            <h2>🔒 Konfirmasi Password</h2>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <h2 style={{ marginBottom: 0 }}>🔒 Konfirmasi Password</h2>
+              <button
+                type="button"
+                disabled={confirming}
+                onClick={() => setConfirmAction(null)}
+                aria-label="Tutup"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--slate500)", display: "flex" }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: -8, marginBottom: 18 }}>
               {confirmAction.type === "add"
                 ? `Masukkan password kamu untuk menambahkan akun ${confirmAction.payload.email}.`
@@ -491,9 +505,23 @@ export default function PengaturanPage() {
       )}
 
       {editingAccessUser && (
-        <div className="modal-overlay" onClick={() => !savingAccess && setEditingAccessUser(null)}>
+        <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: 420 }} onClick={(e) => e.stopPropagation()}>
-            <h2>Edit Akses — {editingAccessUser.email}</h2>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+              <h2 style={{ marginBottom: 0 }}>Edit Akses — {editingAccessUser.email}</h2>
+              <button
+                type="button"
+                disabled={savingAccess}
+                onClick={() => setEditingAccessUser(null)}
+                aria-label="Tutup"
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 6, color: "var(--slate500)", display: "flex", flexShrink: 0 }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: -8, marginBottom: 18 }}>
               Centang minimal 1 halaman. Kosong berarti akun ini tidak bisa akses halaman apa pun (login tapi mentok).
             </p>

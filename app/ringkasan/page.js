@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { createClient } from "@/lib/supabase/client";
@@ -29,6 +29,58 @@ function formatAxisLabel(n) {
   return String(n);
 }
 
+const PERIOD_OPTIONS = [
+  { value: "7d", label: "7 Hari" },
+  { value: "30d", label: "30 Hari" },
+  { value: "3m", label: "3 Bulan" },
+  { value: "6m", label: "6 Bulan" },
+  { value: "12m", label: "12 Bulan" },
+];
+
+function computeTrend(penjualanList, period) {
+  const now = new Date();
+  const plotLeft = 50, plotRight = 740, plotTop = 10, plotBottom = 170;
+  let points = [];
+
+  if (period.endsWith("d")) {
+    const numDays = parseInt(period, 10);
+    for (let i = numDays - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      points.push({ matchDate: d.toDateString(), label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0 });
+    }
+    penjualanList.forEach((p) => {
+      const d = parseTanggalToDate(p.tanggal);
+      if (!d) return;
+      const match = points.find((pt) => pt.matchDate === d.toDateString());
+      if (match) match.value += p.hargaAkhir;
+    });
+  } else {
+    const numMonths = parseInt(period, 10);
+    for (let i = numMonths - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      points.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleDateString("id-ID", { month: "short", year: "2-digit" }), value: 0 });
+    }
+    penjualanList.forEach((p) => {
+      const d = parseTanggalToDate(p.tanggal);
+      if (!d) return;
+      const match = points.find((pt) => pt.month === d.getMonth() && pt.year === d.getFullYear());
+      if (match) match.value += p.hargaAkhir;
+    });
+  }
+
+  const maxVal = niceMaxScale(Math.max(...points.map((d) => d.value), 1000000));
+  const coords = points.map((pt, i) => {
+    const x = points.length > 1 ? plotLeft + (i / (points.length - 1)) * (plotRight - plotLeft) : (plotLeft + plotRight) / 2;
+    const y = plotBottom - (pt.value / maxVal) * (plotBottom - plotTop);
+    return [Math.round(x * 100) / 100, Math.round(y * 100) / 100];
+  });
+  const linePath = catmullRomPath(coords);
+  const areaPath = linePath + ` L${plotRight},${plotBottom} L${plotLeft},${plotBottom} Z`;
+
+  return { points: points.map((pt, i) => ({ ...pt, coord: coords[i] })), maxVal, linePath, areaPath };
+}
+
 export default function RingkasanPage() {
   const [stats, setStats] = useState({
     totalProduk: 0, totalUnit: 0, aman: 0, menipis: 0, habis: 0,
@@ -39,7 +91,9 @@ export default function RingkasanPage() {
   const [perluDirestok, setPerluDirestok] = useState([]);
   const [produkTerlaris, setProdukTerlaris] = useState([]);
   const [kategoriTerlaris, setKategoriTerlaris] = useState([]);
-  const [trend, setTrend] = useState({ points: [], maxVal: 1000000, linePath: "", areaPath: "" });
+  const [penjualanRaw, setPenjualanRaw] = useState([]);
+  const [period, setPeriod] = useState("30d");
+  const trend = useMemo(() => computeTrend(penjualanRaw, period), [penjualanRaw, period]);
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
   const supabase = createClient();
@@ -170,29 +224,7 @@ export default function RingkasanPage() {
         .sort((a, b) => b.val - a.val)
         .slice(0, 5);
 
-      // ===== Grafik tren 30 hari =====
-      const days = [];
-      for (let i = 29; i >= 0; i--) {
-        const d = new Date(now);
-        d.setDate(d.getDate() - i);
-        days.push({ date: d, label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0 });
-      }
-      penjualanList.forEach((p) => {
-        const d = parseTanggalToDate(p.tanggal);
-        if (!d) return;
-        const match = days.find((day) => day.date.toDateString() === d.toDateString());
-        if (match) match.value += p.hargaAkhir;
-      });
-
-      const maxVal = niceMaxScale(Math.max(...days.map((d) => d.value), 1000000));
-      const plotLeft = 50, plotRight = 740, plotTop = 10, plotBottom = 170;
-      const coords = days.map((day, i) => {
-        const x = plotLeft + (i / (days.length - 1)) * (plotRight - plotLeft);
-        const y = plotBottom - (day.value / maxVal) * (plotBottom - plotTop);
-        return [Math.round(x * 100) / 100, Math.round(y * 100) / 100];
-      });
-      const linePath = catmullRomPath(coords);
-      const areaPath = linePath + ` L${plotRight},${plotBottom} L${plotLeft},${plotBottom} Z`;
+      setPenjualanRaw(penjualanList);
 
       setStats({
         totalProduk, totalUnit, aman, menipis, habis,
@@ -203,7 +235,6 @@ export default function RingkasanPage() {
       setPerluDirestok(perluDirestokList);
       setProdukTerlaris(produkTerlarisList);
       setKategoriTerlaris(kategoriList);
-      setTrend({ points: days.map((d, i) => ({ ...d, coord: coords[i] })), maxVal, linePath, areaPath });
       setLastSync("Diperbarui: " + now.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }));
     } catch (err) {
       console.warn("Gagal memuat ringkasan:", err);
@@ -229,7 +260,10 @@ export default function RingkasanPage() {
   ];
 
   const yLabels = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(trend.maxVal * f));
-  const xLabelIdx = [0, 7, 14, 21, 29];
+  const numXLabels = Math.min(6, trend.points.length);
+  const xLabelIdx = trend.points.length > 1
+    ? Array.from({ length: numXLabels }, (_, i) => Math.round((i * (trend.points.length - 1)) / (numXLabels - 1)))
+    : [0];
 
   return (
     <DashboardLayout
@@ -298,7 +332,14 @@ export default function RingkasanPage() {
       <div className="section-lbl">Tren Penjualan</div>
       <div className="panels-trend">
         <div className="panel">
-          <div className="panel-head"><h3>30 Hari Terakhir</h3></div>
+          <div className="panel-head">
+            <h3>{PERIOD_OPTIONS.find((o) => o.value === period)?.label} Terakhir</h3>
+            <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+              {PERIOD_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </div>
           <div className="chart-wrap" id="chartWrap">
             <svg className="chart-svg" viewBox="0 0 750 195" preserveAspectRatio="none" id="chartSvg">
               <defs>
