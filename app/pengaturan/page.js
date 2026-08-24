@@ -8,7 +8,7 @@ import { ACCESS_PAGES } from "@/lib/permissions";
 export default function PengaturanPage() {
   const [form, setForm] = useState({
     nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5, show_real_price: false,
-    hero_heading: "", hero_lede: "",
+    hero_heading: "", hero_lede: "", hero_typed_words: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -203,6 +203,7 @@ export default function PengaturanPage() {
         show_real_price: data.show_real_price ?? false,
         hero_heading: data.hero_heading || "",
         hero_lede: data.hero_lede || "",
+        hero_typed_words: data.hero_typed_words || "",
       });
     } else {
       setMessage({ type: "error", text: "Tabel pengaturan belum ditemukan. Pastikan sudah menjalankan settings-schema.sql di Supabase." });
@@ -227,6 +228,7 @@ export default function PengaturanPage() {
         show_real_price: form.show_real_price,
         hero_heading: form.hero_heading,
         hero_lede: form.hero_lede,
+        hero_typed_words: form.hero_typed_words,
       })
       .eq("id", 1);
 
@@ -317,8 +319,21 @@ export default function PengaturanPage() {
               style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
             />
             <p style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 6 }}>
-              Kata terakhir setelah ini (Hebat/Maju/Tangguh/Sejahtera) akan tetap muncul otomatis bergantian di website — tidak perlu ditulis di sini.
+              Kata terakhir setelah kalimat ini akan muncul otomatis bergantian (diatur di kolom di bawah) — tidak perlu ditulis di sini.
               Tulisan &quot;Taniku Agro&quot; akan otomatis tampil dengan warna aksen kalau ditulis persis begitu.
+            </p>
+          </div>
+          <div className="field" style={{ marginBottom: 14 }}>
+            <label>Kata yang Bergantian (pisahkan dengan koma)</label>
+            <input
+              type="text"
+              value={form.hero_typed_words}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, hero_typed_words: e.target.value })}
+              placeholder="Hebat, Maju, Tangguh, Sejahtera"
+            />
+            <p style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 6 }}>
+              Kata-kata ini akan muncul bergantian dengan efek mengetik di akhir judul. Boleh 1 kata atau lebih, pisahkan dengan koma.
             </p>
           </div>
           <div className="field">
