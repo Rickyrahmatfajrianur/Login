@@ -7,7 +7,7 @@ import { ACCESS_PAGES } from "@/lib/permissions";
 
 export default function PengaturanPage() {
   const [form, setForm] = useState({
-    nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5,
+    nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5, show_real_price: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -199,6 +199,7 @@ export default function PengaturanPage() {
         whatsapp: data.whatsapp || "",
         metode_pembayaran: data.metode_pembayaran || "",
         stok_minimum: data.stok_minimum ?? 5,
+        show_real_price: data.show_real_price ?? false,
       });
     } else {
       setMessage({ type: "error", text: "Tabel pengaturan belum ditemukan. Pastikan sudah menjalankan settings-schema.sql di Supabase." });
@@ -220,6 +221,7 @@ export default function PengaturanPage() {
         whatsapp: form.whatsapp,
         metode_pembayaran: form.metode_pembayaran,
         stok_minimum: parseInt(form.stok_minimum, 10) || 5,
+        show_real_price: form.show_real_price,
       })
       .eq("id", 1);
 
@@ -276,6 +278,24 @@ export default function PengaturanPage() {
           </div>
           <p style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 12, marginBottom: 0 }}>
             Status &quot;Habis&quot; selalu berlaku otomatis jika stok bernilai 0 atau kosong. Berlaku sama untuk semua produk.
+          </p>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <div className="panel-head"><h3>💰 Tampilan Harga di Website</h3></div>
+          <label style={{ display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={form.show_real_price}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, show_real_price: e.target.checked })}
+              style={{ width: 18, height: 18 }}
+            />
+            <span style={{ fontSize: 13.5, fontWeight: 600 }}>Tampilkan harga asli di tanikuagro.com</span>
+          </label>
+          <p style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 10, marginBottom: 0 }}>
+            Kalau dimatikan (belum dicentang), website hanya menampilkan format seperti &quot;Rp XX.XXX&quot; — bukan harga sebenarnya.
+            Kamu bisa nyalakan/matikan ini kapan saja tanpa perlu ubah kode. Harga tiap produk diatur di halaman Master Produk.
           </p>
         </div>
 
