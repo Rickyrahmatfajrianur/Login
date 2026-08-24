@@ -58,6 +58,7 @@ export default function ProdukPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [idEditedManually, setIdEditedManually] = useState(false);
+  const [nameMatches, setNameMatches] = useState([]);
   const supabase = createClient();
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function ProdukPage() {
     setErrorMsg("");
     setUploadError("");
     setIdEditedManually(false);
+    setNameMatches([]);
     setShowModal(true);
   }
 
@@ -131,6 +133,7 @@ export default function ProdukPage() {
     });
     setErrorMsg("");
     setUploadError("");
+    setNameMatches([]);
     setShowModal(true);
   }
 
@@ -286,9 +289,31 @@ export default function ProdukPage() {
                       name,
                       id: !editingId && !idEditedManually ? slugify(name) : prev.id,
                     }));
+
+                    if (name.trim().length >= 2) {
+                      const matches = products
+                        .filter((p) => p.id !== editingId && p.name.toLowerCase().includes(name.trim().toLowerCase()))
+                        .slice(0, 5);
+                      setNameMatches(matches);
+                    } else {
+                      setNameMatches([]);
+                    }
                   }}
+                  autoComplete="off"
                   required
                 />
+                {nameMatches.length > 0 && (
+                  <div style={{ background: "var(--paper)", border: "1px solid var(--line)", borderRadius: 10, padding: "8px 12px", marginTop: 4 }}>
+                    <p style={{ fontSize: 11.5, fontWeight: 700, color: "var(--wheat)", margin: "0 0 6px" }}>
+                      ⚠️ Produk mirip sudah ada di database:
+                    </p>
+                    {nameMatches.map((m) => (
+                      <div key={m.id} style={{ fontSize: 12.5, padding: "4px 0", color: "var(--ink-soft)" }}>
+                        {m.name} {m.size ? `— ${m.size}` : ""}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="field">
