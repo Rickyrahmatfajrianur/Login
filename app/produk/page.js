@@ -29,6 +29,7 @@ const emptyForm = {
   cat: "herbisida",
   size: "",
   price: "",
+  price_grosir: "",
   img: "",
   description: "",
   active_ingredient: "",
@@ -110,6 +111,7 @@ export default function ProdukPage() {
       cat: p.cat || "herbisida",
       size: p.size || "",
       price: p.price ?? "",
+      price_grosir: p.price_grosir ?? "",
       img: p.img || "",
       description: p.description || "",
       active_ingredient: p.active_ingredient || "",
@@ -133,7 +135,11 @@ export default function ProdukPage() {
     }
 
     let result;
-    const payload = { ...form, price: form.price === "" ? null : parseFloat(form.price) };
+    const payload = {
+      ...form,
+      price: form.price === "" ? null : parseFloat(form.price),
+      price_grosir: form.price_grosir === "" ? null : parseFloat(form.price_grosir),
+    };
     if (editingId) {
       result = await supabase.from("products").update(payload).eq("id", editingId);
     } else {
@@ -183,20 +189,21 @@ export default function ProdukPage() {
                 <th>Kategori</th>
                 <th>Ukuran</th>
                 <th>Harga</th>
+                <th>Harga Grosir</th>
                 <th style={{ width: 120 }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: 30 }}>
+                  <td colSpan={6} style={{ textAlign: "center", padding: 30 }}>
                     Memuat data...
                   </td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: 30 }}>
+                  <td colSpan={6} style={{ textAlign: "center", padding: 30 }}>
                     Tidak ada produk yang cocok.
                   </td>
                 </tr>
@@ -208,6 +215,7 @@ export default function ProdukPage() {
                     <td>{CATEGORIES.find((c) => c.id === p.cat)?.label || p.cat}</td>
                     <td>{p.size || "-"}</td>
                     <td>{p.price ? "Rp " + Number(p.price).toLocaleString("id-ID") : "-"}</td>
+                    <td>{p.price_grosir ? "Rp " + Number(p.price_grosir).toLocaleString("id-ID") : "-"}</td>
                     <td>
                       <button className="btn-edit" onClick={() => openEditModal(p)}>
                         Edit
@@ -280,6 +288,17 @@ export default function ProdukPage() {
                   value={form.price}
                   onChange={(e) => setForm({ ...form, price: e.target.value })}
                   placeholder="misal: 50000"
+                />
+              </div>
+
+              <div className="field">
+                <label>Harga Grosir (Rp)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.price_grosir}
+                  onChange={(e) => setForm({ ...form, price_grosir: e.target.value })}
+                  placeholder="misal: 45000"
                 />
               </div>
 
