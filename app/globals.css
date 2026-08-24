@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
   --ink:#0A1A2E; --paper:#F6F7F5; --card:#FFFFFF;
@@ -17,7 +17,7 @@ body{ margin:0; font-family:'Inter',sans-serif; background:var(--paper); color:v
 h1,h2,h3{ font-family:'Sora',sans-serif; margin:0; }
 button{ font-family:inherit; cursor:pointer; }
 input, textarea, select{ font-family:inherit; }
-.mono{ font-family:'JetBrains Mono',monospace; }
+.mono{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; }
 
 /* ===== Login ===== */
 .login-hero{ position:relative; min-height:100vh; overflow:hidden; }
@@ -196,7 +196,7 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 }
 .chart-tooltip.show{ opacity:1; }
 .chart-tooltip .tt-date{ color:rgba(255,255,255,0.6); font-size:10.5px; margin-bottom:2px; }
-.chart-tooltip .tt-val{ font-family:'JetBrains Mono'; font-weight:700; font-size:13px; }
+.chart-tooltip .tt-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; }
 
 /* ===== Pie chart kategori ===== */
 .pie-wrap{ display:flex; align-items:center; gap:20px; }
@@ -204,7 +204,7 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 .pie-legend{ display:flex; flex-direction:column; gap:10px; min-width:0; }
 .pie-legend .row{ display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-soft); white-space:nowrap; }
 .pie-legend .dot{ width:8px; height:8px; border-radius:2px; flex-shrink:0; }
-.pie-legend b{ margin-left:auto; font-family:'JetBrains Mono'; font-size:12.5px; color:var(--ink); padding-left:10px; }
+.pie-legend b{ margin-left:auto; font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:12.5px; color:var(--ink); padding-left:10px; }
 
 /* ===== Gauge level stok ===== */
 .gauge-track{ height:14px; border-radius:999px; background:var(--paper); border:1px solid var(--line); overflow:hidden; display:flex; }
@@ -212,7 +212,7 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 .gauge-legend{ display:flex; flex-direction:column; gap:11px; margin-top:18px; }
 .gauge-legend .row{ display:flex; align-items:center; gap:9px; font-size:13px; }
 .gauge-legend .dot{ width:9px; height:9px; border-radius:2px; flex-shrink:0; }
-.gauge-legend b{ margin-left:auto; font-family:'JetBrains Mono'; font-size:13px; }
+.gauge-legend b{ margin-left:auto; font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:13px; }
 .gauge-legend .sub{ color:var(--ink-faint); font-size:11.5px; }
 
 /* ===== Ranking (Produk Terlaris) ===== */
@@ -220,14 +220,14 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 .rank-item:last-child{ border-bottom:none; }
 .rank-num{ font-family:'Sora'; font-weight:800; font-size:13px; color:var(--ink-faint); width:18px; flex-shrink:0; }
 .rank-name{ font-weight:600; font-size:13px; flex:1; }
-.rank-val{ font-family:'JetBrains Mono'; font-size:12px; color:var(--ink-soft); }
+.rank-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:12px; color:var(--ink-soft); }
 
 /* ===== Perlu Direstok ===== */
 .restock-item{ display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--paper); }
 .restock-item:last-child{ border-bottom:none; }
 .restock-item .dot{ width:7px; height:7px; border-radius:50%; flex-shrink:0; }
 .restock-name{ font-weight:600; font-size:13px; flex:1; }
-.restock-stok{ font-family:'JetBrains Mono'; font-size:12px; color:var(--rust); font-weight:700; }
+.restock-stok{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:12px; color:var(--rust); font-weight:700; }
 
 /* ===== Mini list (aktivitas terbaru) ===== */
 .mini-list{ display:flex; flex-direction:column; gap:2px; }
@@ -236,7 +236,7 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 .mini-item .mi-main{ min-width:0; }
 .mini-item .mi-name{ font-weight:600; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .mini-item .mi-sub{ font-size:11px; color:var(--ink-faint); margin-top:2px; }
-.mini-item .mi-val{ font-family:'JetBrains Mono'; font-size:12.5px; font-weight:600; color:var(--ink-soft); flex-shrink:0; }
+.mini-item .mi-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:12.5px; font-weight:600; color:var(--ink-soft); flex-shrink:0; }
 
 /* ===== Tabel ===== */
 .table-wrap{ overflow-x:auto; }
@@ -245,7 +245,7 @@ th{ text-align:left; color:var(--ink-faint); font-weight:700; font-size:11px; te
 td{ padding:12px 0; border-bottom:1px solid var(--paper); }
 tbody tr:last-child td{ border-bottom:none; }
 td.prod-name{ font-weight:600; }
-td.stok-val{ font-family:'JetBrains Mono'; font-weight:600; }
+td.stok-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-weight:600; }
 .status-badge{ display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:700; padding:4px 10px; border-radius:999px; }
 .status-aman{ background:var(--sage-soft); color:var(--sage); }
 .status-menipis{ background:var(--wheat-soft); color:var(--wheat); }
