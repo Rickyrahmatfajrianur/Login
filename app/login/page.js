@@ -94,9 +94,9 @@ export default function LoginPage() {
             </button>
           </form>
         </div>
-
-        <p className="login-footer-text">© 2026 Taniku Agro</p>
       </div>
+
+      <p className="login-footer-text">© 2026 Taniku Agro</p>
     </div>
   );
 }
