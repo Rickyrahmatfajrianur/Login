@@ -239,7 +239,9 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 .mini-item .mi-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; font-size:12.5px; font-weight:600; color:var(--ink-soft); flex-shrink:0; }
 
 /* ===== Tabel ===== */
-.table-wrap{ overflow-x:auto; }
+.table-wrap{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.table-wrap table{ min-width:600px; }
+.table-wrap td:last-child{ white-space:nowrap; }
 table{ width:100%; border-collapse:collapse; font-size:13px; min-width:600px; }
 th{ text-align:left; color:var(--ink-faint); font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:0.02em; padding:0 0 12px; border-bottom:1px solid var(--line); }
 td{ padding:12px 0; border-bottom:1px solid var(--paper); }

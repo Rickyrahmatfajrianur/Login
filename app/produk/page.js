@@ -196,6 +196,7 @@ export default function ProdukPage() {
       </div>
 
       <div className="produk-table">
+        <div className="table-wrap">
           <table>
             <thead>
               <tr>
@@ -243,6 +244,7 @@ export default function ProdukPage() {
             </tbody>
           </table>
         </div>
+      </div>
 
       {showModal && (
         <div className="modal-overlay">
