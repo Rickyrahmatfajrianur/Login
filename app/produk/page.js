@@ -40,6 +40,9 @@ const emptyForm = {
   price: "",
   price_grosir: "",
   img: "",
+  img2: "",
+  img3: "",
+  is_hidden: false,
   description: "",
   active_ingredient: "",
   target: "",
@@ -55,7 +58,7 @@ export default function ProdukPage() {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(null); // null | "img" | "img2" | "img3"
   const [uploadError, setUploadError] = useState("");
   const [idEditedManually, setIdEditedManually] = useState(false);
   const [nameMatches, setNameMatches] = useState([]);
@@ -76,9 +79,9 @@ export default function ProdukPage() {
     setLoading(false);
   }
 
-  async function handleFileUpload(file) {
+  async function handleFileUpload(file, field) {
     if (!file) return;
-    setUploading(true);
+    setUploading(field);
     setUploadError("");
 
     // Bersihkan nama file: huruf kecil, spasi jadi strip, tambah waktu biar unik
@@ -94,7 +97,7 @@ export default function ProdukPage() {
 
     if (error) {
       setUploadError("Gagal unggah foto: " + error.message);
-      setUploading(false);
+      setUploading(null);
       return;
     }
 
@@ -102,8 +105,8 @@ export default function ProdukPage() {
       .from("product-images")
       .getPublicUrl(fileName);
 
-    setForm((prev) => ({ ...prev, img: publicUrlData.publicUrl }));
-    setUploading(false);
+    setForm((prev) => ({ ...prev, [field]: publicUrlData.publicUrl }));
+    setUploading(null);
   }
 
   function openAddModal() {
@@ -126,6 +129,9 @@ export default function ProdukPage() {
       price: p.price ?? "",
       price_grosir: p.price_grosir ?? "",
       img: p.img || "",
+      img2: p.img2 || "",
+      img3: p.img3 || "",
+      is_hidden: p.is_hidden || false,
       description: p.description || "",
       active_ingredient: p.active_ingredient || "",
       target: p.target || "",
@@ -205,20 +211,21 @@ export default function ProdukPage() {
                 <th>Ukuran</th>
                 <th>Harga</th>
                 <th>Harga Grosir</th>
+                <th>Status</th>
                 <th style={{ width: 120 }}>Aksi</th>
               </tr>
             </thead>
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: 30 }}>
+                  <td colSpan={7} style={{ textAlign: "center", padding: 30 }}>
                     Memuat data...
                   </td>
                 </tr>
               )}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: "center", padding: 30 }}>
+                  <td colSpan={7} style={{ textAlign: "center", padding: 30 }}>
                     Tidak ada produk yang cocok.
                   </td>
                 </tr>
@@ -231,6 +238,13 @@ export default function ProdukPage() {
                     <td>{p.size || "-"}</td>
                     <td>{p.price ? "Rp " + Number(p.price).toLocaleString("id-ID") : "-"}</td>
                     <td>{p.price_grosir ? "Rp " + Number(p.price_grosir).toLocaleString("id-ID") : "-"}</td>
+                    <td>
+                      {p.is_hidden ? (
+                        <span className="status-badge status-menipis">Disembunyikan</span>
+                      ) : (
+                        <span className="status-badge status-aman">Tampil</span>
+                      )}
+                    </td>
                     <td>
                       <button className="btn-edit" onClick={() => openEditModal(p)}>
                         Edit
@@ -364,22 +378,28 @@ export default function ProdukPage() {
               </div>
 
               <div className="field">
-                <label>Foto Produk</label>
-                {form.img && (
-                  <img
-                    src={form.img}
-                    alt="Pratinjau"
-                    style={{ width: 120, height: 120, objectFit: "contain", background: "#F7F9FB", borderRadius: 10, border: "1px solid #DFE6EB", marginBottom: 8 }}
+                <label>Foto Produk (maksimal 3, foto pertama jadi foto utama)</label>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <PhotoSlot label="Foto 1" field="img" form={form} uploading={uploading} onUpload={handleFileUpload} onRemove={() => setForm((prev) => ({ ...prev, img: "" }))} />
+                  <PhotoSlot label="Foto 2" field="img2" form={form} uploading={uploading} onUpload={handleFileUpload} onRemove={() => setForm((prev) => ({ ...prev, img2: "" }))} />
+                  <PhotoSlot label="Foto 3" field="img3" form={form} uploading={uploading} onUpload={handleFileUpload} onRemove={() => setForm((prev) => ({ ...prev, img3: "" }))} />
+                </div>
+                {uploadError && <p style={{ fontSize: 12.5, color: "#C53030", marginTop: 8 }}>{uploadError}</p>}
+              </div>
+
+              <div className="field">
+                <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
+                  <input
+                    type="checkbox"
+                    checked={form.is_hidden}
+                    onChange={(e) => setForm({ ...form, is_hidden: e.target.checked })}
+                    style={{ width: 17, height: 17 }}
                   />
-                )}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFileUpload(e.target.files[0])}
-                  disabled={uploading}
-                />
-                {uploading && <p style={{ fontSize: 12.5, color: "#64748B" }}>Mengunggah foto...</p>}
-                {uploadError && <p style={{ fontSize: 12.5, color: "#C53030" }}>{uploadError}</p>}
+                  Sembunyikan produk ini dari website
+                </label>
+                <p style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 6, marginLeft: 27 }}>
+                  Produk tetap tersimpan di sini, cuma nggak muncul di katalog pelanggan. Cocok buat produk yang lagi kosong total atau belum siap dijual.
+                </p>
               </div>
 
               <div className="field">
@@ -428,5 +448,48 @@ export default function ProdukPage() {
         </div>
       )}
     </DashboardLayout>
+  );
+}
+
+function PhotoSlot({ label, field, form, uploading, onUpload, onRemove }) {
+  const value = form[field];
+  const isUploadingThis = uploading === field;
+
+  return (
+    <div style={{ width: 110 }}>
+      <div
+        style={{
+          width: 110, height: 110, borderRadius: 10, background: "#F7F9FB", border: "1px solid #DFE6EB",
+          display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", position: "relative",
+        }}
+      >
+        {value ? (
+          <img src={value} alt={label} style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        ) : (
+          <span style={{ fontSize: 11, color: "var(--ink-faint)" }}>{isUploadingThis ? "Mengunggah..." : "Kosong"}</span>
+        )}
+      </div>
+      <p style={{ fontSize: 11, fontWeight: 600, color: "var(--ink-soft)", margin: "6px 0 4px", textAlign: "center" }}>{label}</p>
+      {value ? (
+        <button
+          type="button"
+          onClick={onRemove}
+          style={{ width: "100%", fontSize: 11, color: "var(--rust)", background: "none", border: "1px solid #F6E8E4", borderRadius: 8, padding: "4px 0", cursor: "pointer" }}
+        >
+          Hapus
+        </button>
+      ) : (
+        <label style={{ display: "block", width: "100%", fontSize: 11, color: "var(--brand)", background: "none", border: "1px solid var(--brand-soft)", borderRadius: 8, padding: "4px 0", textAlign: "center", cursor: "pointer" }}>
+          {isUploadingThis ? "..." : "Pilih"}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => onUpload(e.target.files[0], field)}
+            disabled={!!uploading}
+            style={{ display: "none" }}
+          />
+        </label>
+      )}
+    </div>
   );
 }
