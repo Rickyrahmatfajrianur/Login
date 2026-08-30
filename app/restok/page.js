@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal } from "@/lib/dashboardUtils";
+import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia } from "@/lib/dashboardUtils";
 
 export default function RestokPage() {
   const [data, setData] = useState([]);
@@ -36,7 +36,7 @@ export default function RestokPage() {
           nama: (r[idxNama] || "").toString().trim(),
           banyak: (r[idxBanyak] || "0").toString().trim(),
           harga: (r[idxHarga] || "").toString().trim(),
-          total: parseFloat((r[idxTotal] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
+          total: parseAngkaIndonesia(r[idxTotal]),
           status: (r[idxStatus] || "").toString().trim(),
         }))
         .filter((p) => p.nama);

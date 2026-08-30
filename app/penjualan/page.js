@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal } from "@/lib/dashboardUtils";
+import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia } from "@/lib/dashboardUtils";
 
 export default function PenjualanPage() {
   const [data, setData] = useState([]);
@@ -34,8 +34,8 @@ export default function PenjualanPage() {
           nama: (r[idxNama] || "").toString().trim(),
           status: (r[idxStatus] || "").toString().trim(),
           banyak: (r[idxBanyak] || "0").toString().trim(),
-          profit: parseFloat((r[idxProfit] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
-          hargaAkhir: parseFloat((r[idxHargaAkhir] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
+          profit: parseAngkaIndonesia(r[idxProfit]),
+          hargaAkhir: parseAngkaIndonesia(r[idxHargaAkhir]),
         }))
         .filter((p) => p.nama);
 

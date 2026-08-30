@@ -9,6 +9,7 @@ import {
   formatRupiah,
   formatTanggal,
   parseTanggalToDate,
+  parseAngkaIndonesia,
 } from "@/lib/dashboardUtils";
 
 const BULAN_LABEL = [
@@ -48,7 +49,7 @@ export default function LaporanPage() {
             distributor: (r[idxDist] || "").toString().trim(),
             nama: (r[idxNama] || "").toString().trim(),
             banyak: parseFloat(r[idxBanyak]) || 0,
-            total: parseFloat((r[idxTotal] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
+            total: parseAngkaIndonesia(r[idxTotal]),
           }))
           .filter((p) => p.nama);
       }
@@ -69,8 +70,8 @@ export default function LaporanPage() {
             customer: (r[idxCustomer] || "").toString().trim(),
             nama: (r[idxNama] || "").toString().trim(),
             banyak: parseFloat(r[idxBanyak]) || 0,
-            profit: parseFloat((r[idxProfit] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
-            hargaAkhir: parseFloat((r[idxHargaAkhir] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
+            profit: parseAngkaIndonesia(r[idxProfit]),
+            hargaAkhir: parseAngkaIndonesia(r[idxHargaAkhir]),
           }))
           .filter((p) => p.nama);
       }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseTanggalToDate } from "@/lib/dashboardUtils";
+import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseTanggalToDate, parseAngkaIndonesia } from "@/lib/dashboardUtils";
 
 export default function SupplierPage() {
   const [suppliers, setSuppliers] = useState([]);
@@ -33,7 +33,7 @@ export default function SupplierPage() {
           distributor: (r[idxDist] || "").toString().trim(),
           nama: (r[idxNama] || "").toString().trim(),
           banyak: parseFloat(r[idxBanyak]) || 0,
-          total: parseFloat((r[idxTotal] || "").toString().replace(/[^0-9.-]/g, "")) || 0,
+          total: parseAngkaIndonesia(r[idxTotal]),
         }))
         .filter((p) => p.nama && p.distributor);
 
