@@ -76,7 +76,7 @@ function computeTrend(penjualanList, period) {
     const y = plotBottom - (pt.value / maxVal) * (plotBottom - plotTop);
     return [Math.round(x * 100) / 100, Math.round(y * 100) / 100];
   });
-  const linePath = catmullRomPath(coords);
+  const linePath = catmullRomPath(coords, 0.3, plotBottom);
   const areaPath = linePath + ` L${plotRight},${plotBottom} L${plotLeft},${plotBottom} Z`;
 
   return { points: points.map((pt, i) => ({ ...pt, coord: coords[i] })), maxVal, linePath, areaPath };
@@ -342,7 +342,7 @@ export default function RingkasanPage() {
             </select>
           </div>
           <div className="chart-wrap" id="chartWrap">
-            <svg className="chart-svg" viewBox="0 0 750 195" preserveAspectRatio="none" id="chartSvg">
+            <svg className="chart-svg" viewBox="0 0 750 195" id="chartSvg">
               <defs>
                 <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#0B6FDB" stopOpacity="0.18" />
