@@ -548,9 +548,9 @@ export default function PengaturanPage() {
               </button>
             </div>
             <p style={{ fontSize: 13.5, color: "var(--ink-soft)", marginTop: -8, marginBottom: 18 }}>
-              {confirmAction.type === "add"
-                ? `Masukkan password kamu untuk menambahkan akun ${confirmAction.payload.email}.`
-                : `Masukkan password kamu untuk menghapus akun ${confirmAction.payload.email}.`}
+              {confirmAction.type === "add" && `Masukkan password kamu untuk menambahkan akun ${confirmAction.payload.email}.`}
+              {confirmAction.type === "delete" && `Masukkan password kamu untuk menghapus akun ${confirmAction.payload.email}.`}
+              {confirmAction.type === "editAccess" && `Masukkan password kamu untuk menyimpan perubahan akses ${confirmAction.payload.email}.`}
             </p>
 
             <form className="modal-form" onSubmit={handleConfirmPassword}>
@@ -578,7 +578,13 @@ export default function PengaturanPage() {
                   disabled={confirming}
                   style={confirmAction.type === "delete" ? { background: "var(--rust)" } : {}}
                 >
-                  {confirming ? "Memverifikasi..." : confirmAction.type === "add" ? "Konfirmasi & Tambah" : "Konfirmasi & Hapus"}
+                  {confirming
+                    ? "Memverifikasi..."
+                    : confirmAction.type === "add"
+                    ? "Konfirmasi & Tambah"
+                    : confirmAction.type === "editAccess"
+                    ? "Konfirmasi & Simpan"
+                    : "Konfirmasi & Hapus"}
                 </button>
               </div>
             </form>
