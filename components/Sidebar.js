@@ -22,9 +22,23 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const [allowedPages, setAllowedPages] = useState(null); // null = belum dicek / pemilik
   const [email, setEmail] = useState("");
   const supabase = createClient();
+
+  useEffect(() => {
+    const saved = localStorage.getItem("sidebar_collapsed");
+    setCollapsed(saved === "true");
+  }, []);
+
+  function toggleCollapsed() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem("sidebar_collapsed", String(next));
+      return next;
+    });
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -54,7 +68,17 @@ export default function Sidebar() {
       </button>
       {open && <div className="sidebar-overlay open" onClick={() => setOpen(false)} />}
 
-      <aside className={`dash-sidebar ${open ? "open" : ""}`}>
+      <button
+        className={`sidebar-collapse-handle ${collapsed ? "collapsed" : ""}`}
+        onClick={toggleCollapsed}
+        aria-label={collapsed ? "Tampilkan menu" : "Sembunyikan menu"}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          {collapsed ? <polyline points="9 18 15 12 9 6" /> : <polyline points="15 18 9 12 15 6" />}
+        </svg>
+      </button>
+
+      <aside className={`dash-sidebar ${open ? "open" : ""} ${collapsed ? "desktop-collapsed" : ""}`}>
         <div className="sidebar-brand">
           <img src="https://tanikuagro.com/images/logo.webp" alt="Taniku Agro" />
         </div>
