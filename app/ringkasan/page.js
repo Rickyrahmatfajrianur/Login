@@ -32,8 +32,8 @@ function formatAxisLabel(n) {
 }
 
 const PERIOD_OPTIONS = [
-  { value: "7d", label: "7 Hari" },
-  { value: "30d", label: "30 Hari" },
+  { value: "bulan_ini", label: "Bulan Ini" },
+  { value: "bulan_lalu", label: "Bulan Lalu" },
   { value: "3m", label: "3 Bulan" },
   { value: "6m", label: "6 Bulan" },
   { value: "12m", label: "12 Bulan" },
@@ -44,11 +44,23 @@ function computeTrend(penjualanList, period) {
   const plotLeft = 50, plotRight = 740, plotTop = 10, plotBottom = 170;
   let points = [];
 
-  if (period.endsWith("d")) {
-    const numDays = parseInt(period, 10);
-    for (let i = numDays - 1; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
+  if (period === "bulan_ini" || period === "bulan_lalu") {
+    // Tentukan bulan & tahun target (kalender, bukan hitung mundur N hari)
+    let targetMonth = now.getMonth();
+    let targetYear = now.getFullYear();
+    if (period === "bulan_lalu") {
+      targetMonth -= 1;
+      if (targetMonth < 0) {
+        targetMonth = 11;
+        targetYear -= 1;
+      }
+    }
+    const isBulanIni = period === "bulan_ini";
+    const jumlahHari = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const hariTerakhir = isBulanIni ? now.getDate() : jumlahHari;
+
+    for (let tgl = 1; tgl <= hariTerakhir; tgl++) {
+      const d = new Date(targetYear, targetMonth, tgl);
       points.push({ matchDate: d.toDateString(), label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0 });
     }
     penjualanList.forEach((p) => {
@@ -94,7 +106,7 @@ export default function RingkasanPage() {
   const [produkTerlaris, setProdukTerlaris] = useState([]);
   const [kategoriTerlaris, setKategoriTerlaris] = useState([]);
   const [penjualanRaw, setPenjualanRaw] = useState([]);
-  const [period, setPeriod] = useState("30d");
+  const [period, setPeriod] = useState("bulan_ini");
   const trend = useMemo(() => computeTrend(penjualanRaw, period), [penjualanRaw, period]);
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
