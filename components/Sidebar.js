@@ -8,6 +8,7 @@ import { hasAccess } from "@/lib/permissions";
 
 const NAV_ITEMS = [
   { href: "/ringkasan", key: "ringkasan", label: "Dashboard", icon: "M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z" },
+  { href: "/kasir", key: "kasir", label: "Kasir", icon: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" },
   { href: "/produk", key: "produk", label: "Master Produk", icon: "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" },
   { href: "/stok-barang", key: "stok-barang", label: "Stok Barang", icon: "M20 7h-9M14 17H5M17 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM7 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" },
   { href: "/restok", key: "restok", label: "Stok Masuk", icon: "M12 5v14M19 12l-7 7-7-7" },

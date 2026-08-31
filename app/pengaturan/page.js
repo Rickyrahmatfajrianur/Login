@@ -9,6 +9,7 @@ export default function PengaturanPage() {
   const [form, setForm] = useState({
     nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5, show_real_price: false,
     hero_heading: "", hero_lede: "", hero_typed_words: "",
+    kasir_script_url: "", kasir_script_key: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -204,6 +205,8 @@ export default function PengaturanPage() {
         hero_heading: data.hero_heading || "",
         hero_lede: data.hero_lede || "",
         hero_typed_words: data.hero_typed_words || "",
+        kasir_script_url: data.kasir_script_url || "",
+        kasir_script_key: data.kasir_script_key || "",
       });
     } else {
       setMessage({ type: "error", text: "Tabel pengaturan belum ditemukan. Pastikan sudah menjalankan settings-schema.sql di Supabase." });
@@ -229,6 +232,8 @@ export default function PengaturanPage() {
         hero_heading: form.hero_heading,
         hero_lede: form.hero_lede,
         hero_typed_words: form.hero_typed_words,
+        kasir_script_url: form.kasir_script_url,
+        kasir_script_key: form.kasir_script_key,
       })
       .eq("id", 1);
 
@@ -347,6 +352,33 @@ export default function PengaturanPage() {
               style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14, fontFamily: "inherit", resize: "vertical" }}
             />
           </div>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <div className="panel-head"><h3>🧾 Sinkronisasi Kasir</h3></div>
+          <div className="field" style={{ marginBottom: 14 }}>
+            <label>URL Google Apps Script</label>
+            <input
+              type="text"
+              value={form.kasir_script_url}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, kasir_script_url: e.target.value })}
+              placeholder="https://script.google.com/macros/s/.../exec"
+            />
+          </div>
+          <div className="field">
+            <label>Kata Kunci (API Key)</label>
+            <input
+              type="text"
+              value={form.kasir_script_key}
+              disabled={loading}
+              onChange={(e) => setForm({ ...form, kasir_script_key: e.target.value })}
+              placeholder="tanikuagro"
+            />
+          </div>
+          <p style={{ fontSize: 11.5, color: "var(--ink-faint)", marginTop: 10, marginBottom: 0 }}>
+            Ini menghubungkan halaman Kasir ke sheet DAFTAR BARANG &amp; DATA PENJUALAN kamu lewat Google Apps Script. Cukup diisi sekali, berlaku buat semua perangkat.
+          </p>
         </div>
 
         <div className="panel" style={{ marginBottom: 16 }}>
