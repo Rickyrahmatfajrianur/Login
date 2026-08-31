@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia } from "@/lib/dashboardUtils";
+import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia, parseTanggalToDate } from "@/lib/dashboardUtils";
+
+const BULAN_LABEL = [
+  "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+  "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+];
 
 export default function RestokPage() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [filterBulan, setFilterBulan] = useState("semua"); // "semua" atau index 0-11
+  const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -61,14 +68,25 @@ export default function RestokPage() {
     setTimeout(() => setRefreshing(false), 400);
   }
 
-  const filtered = data.filter(
+  const dataPeriode = useMemo(() => {
+    if (filterBulan === "semua") return data;
+    return data.filter((p) => {
+      const d = parseTanggalToDate(p.tanggal);
+      return d && d.getMonth() === Number(filterBulan) && d.getFullYear() === Number(filterTahun);
+    });
+  }, [data, filterBulan, filterTahun]);
+
+  const filtered = dataPeriode.filter(
     (p) =>
       !search ||
       p.nama.toLowerCase().includes(search.toLowerCase()) ||
       p.distributor.toLowerCase().includes(search.toLowerCase())
   );
-  const totalNilai = data.reduce((s, p) => s + p.total, 0);
-  const terakhir = data.length ? formatTanggal(data[data.length - 1].tanggal, true) : "-";
+  const totalNilai = dataPeriode.reduce((s, p) => s + p.total, 0);
+  const terakhir = dataPeriode.length ? formatTanggal(dataPeriode[dataPeriode.length - 1].tanggal, true) : "-";
+
+  const tahunOptions = [];
+  for (let y = new Date().getFullYear(); y >= new Date().getFullYear() - 2; y--) tahunOptions.push(y);
 
   return (
     <DashboardLayout
@@ -89,11 +107,11 @@ export default function RestokPage() {
       <div className="stat-row fin">
         <div className="stat-cell">
           <div className="lbl">Total Transaksi</div>
-          <div className="val">{data.length || "–"}</div>
+          <div className="val">{dataPeriode.length || "–"}</div>
         </div>
         <div className="stat-cell">
           <div className="lbl">Total Barang Masuk</div>
-          <div className="val">{data.reduce((s, p) => s + (parseFloat(p.banyak) || 0), 0)}</div>
+          <div className="val">{dataPeriode.reduce((s, p) => s + (parseFloat(p.banyak) || 0), 0)}</div>
         </div>
         <div className="stat-cell accent">
           <div className="lbl">Total Nilai Pembelian</div>
@@ -109,6 +127,19 @@ export default function RestokPage() {
         <div className="panel-head">
           <h3>Riwayat Restok Barang</h3>
           <div className="panel-controls">
+            <select value={filterBulan} onChange={(e) => setFilterBulan(e.target.value)} style={{ border: "1.5px solid var(--line)", borderRadius: 10, padding: "9px 12px", fontSize: 13 }}>
+              <option value="semua">Semua Bulan</option>
+              {BULAN_LABEL.map((b, i) => (
+                <option key={i} value={i}>{b}</option>
+              ))}
+            </select>
+            {filterBulan !== "semua" && (
+              <select value={filterTahun} onChange={(e) => setFilterTahun(parseInt(e.target.value, 10))} style={{ border: "1.5px solid var(--line)", borderRadius: 10, padding: "9px 12px", fontSize: 13 }}>
+                {tahunOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            )}
             <div className="search-box">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
@@ -130,7 +161,7 @@ export default function RestokPage() {
             <tbody>
               {loading && <tr><td colSpan={8} className="loading-row">Memuat data...</td></tr>}
               {!loading && filtered.length === 0 && (
-                <tr><td colSpan={8} className="empty-row">Belum ada transaksi restok yang tercatat.</td></tr>
+                <tr><td colSpan={8} className="empty-row">Tidak ada transaksi restok pada periode ini.</td></tr>
               )}
               {!loading &&
                 filtered.slice().reverse().map((p, i) => (
