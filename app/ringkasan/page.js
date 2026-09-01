@@ -5,6 +5,18 @@ import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
 import { createClient } from "@/lib/supabase/client";
 import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  PieChart as RePieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
   CSV_URLS,
   fetchCsvRows,
   findHeaderRow,
@@ -15,8 +27,6 @@ import {
   formatRupiah,
   formatTanggal,
   parseTanggalToDate,
-  catmullRomPath,
-  niceMaxScale,
   fetchSettings,
   DEFAULT_STOK_MIN,
   parseAngkaIndonesia,
@@ -41,7 +51,6 @@ const PERIOD_OPTIONS = [
 
 function computeTrend(penjualanList, period) {
   const now = new Date();
-  const plotLeft = 50, plotRight = 740, plotTop = 10, plotBottom = 170;
   let points = [];
 
   if (period === "bulan_ini" || period === "bulan_lalu") {
@@ -83,16 +92,7 @@ function computeTrend(penjualanList, period) {
     });
   }
 
-  const maxVal = niceMaxScale(Math.max(...points.map((d) => d.value), 1000000));
-  const coords = points.map((pt, i) => {
-    const x = points.length > 1 ? plotLeft + (i / (points.length - 1)) * (plotRight - plotLeft) : (plotLeft + plotRight) / 2;
-    const y = plotBottom - (pt.value / maxVal) * (plotBottom - plotTop);
-    return [Math.round(x * 100) / 100, Math.round(y * 100) / 100];
-  });
-  const linePath = catmullRomPath(coords, 0.3, plotBottom);
-  const areaPath = linePath + ` L${plotRight},${plotBottom} L${plotLeft},${plotBottom} Z`;
-
-  return { points: points.map((pt, i) => ({ ...pt, coord: coords[i] })), maxVal, linePath, areaPath };
+  return { points };
 }
 
 export default function RingkasanPage() {
@@ -273,12 +273,6 @@ export default function RingkasanPage() {
     { pct: totalStokBucket ? (stats.habis / totalStokBucket) * 100 : 0, color: "#A0402C" },
   ];
 
-  const yLabels = [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(trend.maxVal * f));
-  const numXLabels = Math.min(6, trend.points.length);
-  const xLabelIdx = trend.points.length > 1
-    ? Array.from({ length: numXLabels }, (_, i) => Math.round((i * (trend.points.length - 1)) / (numXLabels - 1)))
-    : [0];
-
   return (
     <DashboardLayout
       title="Dashboard"
@@ -354,52 +348,41 @@ export default function RingkasanPage() {
               ))}
             </select>
           </div>
-          <div className="chart-wrap" id="chartWrap">
-            <svg className="chart-svg" viewBox="0 0 750 195" id="chartSvg">
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart data={trend.points} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
                 <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#0B6FDB" stopOpacity="0.18" />
-                  <stop offset="100%" stopColor="#0B6FDB" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#0B6FDB" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="#0B6FDB" stopOpacity={0} />
                 </linearGradient>
               </defs>
-
-              <g>
-                {yLabels.map((v, i) => {
-                  const y = 170 - (v / (trend.maxVal || 1)) * 160;
-                  return (
-                    <g key={i}>
-                      <line x1="50" y1={y} x2="740" y2={y} className="grid-line" />
-                      <text x="42" y={y + 3} className="axis-label" textAnchor="end">{formatAxisLabel(v)}</text>
-                    </g>
-                  );
-                })}
-              </g>
-
-              {trend.linePath && (
-                <>
-                  <path d={trend.linePath} fill="none" stroke="#0B6FDB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d={trend.areaPath} fill="url(#chartFade)" />
-                </>
-              )}
-
-              <g id="chartPointsRingkasan">
-                {trend.points && trend.points.map((p, i) => (
-                  <ChartPoint key={i} x={p.coord[0]} y={p.coord[1]} date={p.label} value={p.value} />
-                ))}
-              </g>
-
-              <g>
-                {xLabelIdx.map((i) => {
-                  const p = trend.points && trend.points[i];
-                  if (!p) return null;
-                  return (
-                    <text key={i} x={p.coord[0]} y="188" className="axis-label" textAnchor="middle">{p.label}</text>
-                  );
-                })}
-              </g>
-            </svg>
-            <div className="chart-tooltip" id="chartTooltipRingkasan"></div>
-          </div>
+              <CartesianGrid vertical={false} stroke="var(--line)" />
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 10, fill: "var(--ink-faint)" }}
+                interval={Math.max(0, Math.floor((trend.points?.length || 1) / 5) - 1)}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                width={44}
+                tick={{ fontSize: 10, fill: "var(--ink-faint)" }}
+                tickFormatter={formatAxisLabel}
+              />
+              <RechartsTooltip content={<TrendTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke="#0B6FDB"
+                strokeWidth={2.5}
+                fill="url(#chartFade)"
+                dot={{ r: 3, fill: "#fff", stroke: "#0B6FDB", strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: "#0B6FDB", stroke: "#fff", strokeWidth: 2 }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
 
         <div className="panel">
@@ -408,7 +391,25 @@ export default function RingkasanPage() {
             <p className="empty-row">Belum ada data penjualan.</p>
           ) : (
             <div className="pie-wrap">
-              <PieChart data={kategoriTerlaris} />
+              <ResponsiveContainer width={140} height={140}>
+                <RePieChart>
+                  <Pie
+                    data={kategoriTerlaris}
+                    dataKey="val"
+                    nameKey="label"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={0}
+                    outerRadius={65}
+                    isAnimationActive={false}
+                  >
+                    {kategoriTerlaris.map((entry, i) => (
+                      <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="#fff" strokeWidth={1} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(value) => formatRupiahPenuh(value)} />
+                </RePieChart>
+              </ResponsiveContainer>
               <div className="pie-legend">
                 {kategoriTerlaris.map((k, i) => (
                   <div className="row" key={i}>
@@ -507,61 +508,12 @@ export default function RingkasanPage() {
   );
 }
 
-function PieChart({ data }) {
-  const cx = 65, cy = 65, r = 60;
-  const total = data.reduce((s, d) => s + d.val, 0) || 1;
-  let startAngle = -90;
-  const paths = data.map((d, i) => {
-    const angle = (d.val / total) * 360;
-    const endAngle = startAngle + angle;
-    const x1 = cx + r * Math.cos((startAngle * Math.PI) / 180);
-    const y1 = cy + r * Math.sin((startAngle * Math.PI) / 180);
-    const x2 = cx + r * Math.cos((endAngle * Math.PI) / 180);
-    const y2 = cy + r * Math.sin((endAngle * Math.PI) / 180);
-    const largeArc = angle > 180 ? 1 : 0;
-    const path = `M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${largeArc} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`;
-    startAngle = endAngle;
-    return path;
-  });
+function TrendTooltip({ active, payload, label }) {
+  if (!active || !payload || payload.length === 0) return null;
   return (
-    <svg viewBox="0 0 130 130" className="pie-svg">
-      {paths.map((p, i) => (
-        <path key={i} d={p} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-      ))}
-    </svg>
-  );
-}
-
-function ChartPoint({ x, y, date, value }) {
-  const [hover, setHover] = useState(false);
-
-  useEffect(() => {
-    const tooltip = document.getElementById("chartTooltipRingkasan");
-    const svg = document.getElementById("chartSvg");
-    const wrap = document.getElementById("chartWrap");
-    if (!hover || !tooltip || !svg || !wrap) {
-      if (tooltip) tooltip.classList.remove("show");
-      return;
-    }
-    tooltip.innerHTML = `<div class="tt-date">${date} ${new Date().getFullYear()}</div><div class="tt-val">${formatRupiahPenuh(value)}</div>`;
-    const svgRect = svg.getBoundingClientRect();
-    const wrapRect = wrap.getBoundingClientRect();
-    const scaleX = svgRect.width / 750;
-    const scaleY = svgRect.height / 195;
-    tooltip.style.left = (svgRect.left - wrapRect.left) + x * scaleX + "px";
-    tooltip.style.top = (svgRect.top - wrapRect.top) + y * scaleY + "px";
-    tooltip.classList.add("show");
-  }, [hover, x, y, date, value]);
-
-  return (
-    <>
-      <circle cx={x} cy={y} r={hover ? 5 : 3} className="chart-point" />
-      <circle
-        cx={x} cy={y} r={14} className="chart-point-hit"
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-        onTouchStart={() => setHover(true)}
-      />
-    </>
+    <div className="chart-tooltip show" style={{ position: "static", transform: "none" }}>
+      <div className="tt-date">{label} {new Date().getFullYear()}</div>
+      <div className="tt-val">{formatRupiahPenuh(payload[0].value)}</div>
+    </div>
   );
 }
