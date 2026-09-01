@@ -254,7 +254,7 @@ export default function PengaturanPage() {
           <b style={{ color: "var(--brand-deep)" }}>Perubahan Ambang Batas Stok berlaku otomatis</b>
           <p style={{ color: "var(--brand-deep)" }}>
             Angka ini dipakai di halaman Stok Barang &amp; Dashboard untuk menentukan status &quot;Menipis&quot;. Profil Toko di bawah ini
-            khusus untuk catatan internal &mdash; belum otomatis mengubah tampilan di website tanikuagro.com.
+            (WhatsApp, alamat, jam operasional, metode pembayaran) juga otomatis tersambung ke footer &amp; hero website tanikuagro.com.
           </p>
         </div>
       </div>

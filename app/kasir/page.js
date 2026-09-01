@@ -139,7 +139,22 @@ export default function KasirPage() {
     })
     .sort((a, b) => a.nama.localeCompare(b.nama));
 
+  // Sisa stok yang boleh ditambahkan lagi ke keranjang (stok asli dikurangi yang sudah ada di keranjang).
+  // Kalau produknya nggak ketemu (misal data belum sinkron), jangan dibatasi sama sekali.
+  function sisaStokUntukKeranjang(nama) {
+    const produk = products.find((p) => p.nama === nama);
+    if (!produk) return Infinity;
+    return produk.stok;
+  }
+
   function tambahKeKeranjang(nama, harga) {
+    const stokTersedia = sisaStokUntukKeranjang(nama);
+    const qtyDiKeranjang = cart[nama]?.qty || 0;
+    if (qtyDiKeranjang + 1 > stokTersedia) {
+      showToast(`Stok ${nama} tinggal ${formatAngkaKasir(stokTersedia)}`);
+      return;
+    }
+
     setCart((prev) => {
       const next = { ...prev };
       if (!next[nama]) next[nama] = { harga, qty: 0 };
@@ -154,10 +169,20 @@ export default function KasirPage() {
   }
 
   function ubahQty(nama, delta) {
+    const current = cart[nama];
+    if (!current) return;
+    const newQty = current.qty + delta;
+
+    if (delta > 0) {
+      const stokTersedia = sisaStokUntukKeranjang(nama);
+      if (newQty > stokTersedia) {
+        showToast(`Stok ${nama} tinggal ${formatAngkaKasir(stokTersedia)}`);
+        return;
+      }
+    }
+
     setCart((prev) => {
-      if (!prev[nama]) return prev;
       const next = { ...prev };
-      const newQty = next[nama].qty + delta;
       if (newQty <= 0) {
         delete next[nama];
       } else {
@@ -193,7 +218,7 @@ export default function KasirPage() {
       diskon: diskonNum,
       total,
       uang_dibayar: dibayarNum,
-      kembalian: Math.max(0, kembalian),
+      kembalian, // bisa negatif = kurang bayar, disimpan apa adanya (jangan dibulatkan ke 0)
       status_sinkron: "belum_sinkron",
       items,
     };
@@ -369,7 +394,8 @@ export default function KasirPage() {
                 </div>
               )}
               {produkTampil.map((p) => {
-                const habis = p.stok <= 0;
+                const qtyDiKeranjang = cart[p.nama]?.qty || 0;
+                const habis = p.stok <= 0 || qtyDiKeranjang >= p.stok;
                 const menipis = p.stok <= 5;
                 return (
                   <div
@@ -554,7 +580,10 @@ export default function KasirPage() {
               <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700 }}><span>TOTAL</span><span>{formatRupiahKasir(receipt.total)}</span></div>
               <hr />
               <div style={{ display: "flex", justifyContent: "space-between" }}><span>Tunai</span><span>{formatRupiahKasir(receipt.uang_dibayar)}</span></div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}><span>Kembali</span><span>{formatRupiahKasir(receipt.kembalian)}</span></div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span>{receipt.kembalian < 0 ? "Kurang Bayar" : "Kembali"}</span>
+                <span>{formatRupiahKasir(Math.abs(receipt.kembalian))}</span>
+              </div>
               <hr />
               <div style={{ textAlign: "center" }}>Terima kasih</div>
             </div>

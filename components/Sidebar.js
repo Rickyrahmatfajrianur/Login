@@ -25,6 +25,7 @@ export default function Sidebar() {
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [allowedPages, setAllowedPages] = useState(null); // null = belum dicek / pemilik
+  const [permLoaded, setPermLoaded] = useState(false); // true setelah data user selesai diambil
   const [email, setEmail] = useState("");
   const supabase = createClient();
 
@@ -47,6 +48,7 @@ export default function Sidebar() {
         setEmail(user.email || "");
         setAllowedPages(Array.isArray(user.app_metadata?.allowed_pages) ? user.app_metadata.allowed_pages : null);
       }
+      setPermLoaded(true);
     });
   }, []);
 
@@ -56,7 +58,10 @@ export default function Sidebar() {
     router.refresh();
   }
 
-  const visibleItems = NAV_ITEMS.filter((item) => hasAccess(allowedPages, item.key));
+  // Sebelum permLoaded, jangan tampilkan menu apa pun dulu — daripada sempat
+  // menampilkan semua menu (termasuk yang harusnya dibatasi) sesaat sebelum
+  // izin akses akun ini selesai diperiksa.
+  const visibleItems = permLoaded ? NAV_ITEMS.filter((item) => hasAccess(allowedPages, item.key)) : [];
 
   return (
     <>

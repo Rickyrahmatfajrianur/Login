@@ -71,7 +71,7 @@ function computeTrend(penjualanList, period) {
 
     for (let tgl = 1; tgl <= hariTerakhir; tgl++) {
       const d = new Date(targetYear, targetMonth, tgl);
-      points.push({ matchDate: d.toDateString(), label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0, profit: 0 });
+      points.push({ matchDate: d.toDateString(), year: targetYear, label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0, profit: 0 });
     }
     penjualanList.forEach((p) => {
       const d = parseTanggalToDate(p.tanggal);
@@ -563,9 +563,10 @@ function TrendTooltip({ active, payload, label, showPenjualan, showLaba }) {
   if (!active || !payload || payload.length === 0) return null;
   const penjualanEntry = payload.find((p) => p.dataKey === "value");
   const labaEntry = payload.find((p) => p.dataKey === "profit");
+  const year = payload[0]?.payload?.year;
   return (
     <div className="chart-tooltip show" style={{ position: "static", transform: "none" }}>
-      <div className="tt-date">{label} {new Date().getFullYear()}</div>
+      <div className="tt-date">{label}{year ? " " + year : ""}</div>
       {showPenjualan && penjualanEntry && (
         <div className="tt-val" style={{ color: "#0B6FDB" }}>Penjualan: {formatRupiahPenuh(penjualanEntry.value)}</div>
       )}
