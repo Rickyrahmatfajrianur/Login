@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { hasAccess } from "@/lib/permissions";
+import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
   { href: "/ringkasan", key: "ringkasan", label: "Dashboard", icon: "M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z" },
@@ -106,6 +107,7 @@ export default function Sidebar() {
             <span>{allowedPages ? "Karyawan" : "Owner"}</span>
           </div>
         </div>
+        <ThemeToggle />
         <button className="btn-logout-sidebar" onClick={handleLogout}>
           Keluar
         </button>

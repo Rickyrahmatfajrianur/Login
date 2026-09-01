@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonTableRows } from "@/components/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 
 const CATEGORIES = [
@@ -216,13 +217,7 @@ export default function ProdukPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: 30 }}>
-                    Memuat data...
-                  </td>
-                </tr>
-              )}
+              {loading && <SkeletonTableRows cols={7} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr>
                   <td colSpan={7} style={{ textAlign: "center", padding: 30 }}>

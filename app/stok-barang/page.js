@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonTableRows, SkeletonStatRow } from "@/components/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import {
   CSV_URLS,
@@ -102,24 +103,28 @@ export default function StokBarangPage() {
         </>
       }
     >
-      <div className="stat-row">
-        <div className="stat-cell">
-          <div className="lbl">Total Produk</div>
-          <div className="val">{stockData.length || "–"}</div>
+      {loading ? (
+        <SkeletonStatRow count={4} />
+      ) : (
+        <div className="stat-row">
+          <div className="stat-cell">
+            <div className="lbl">Total Produk</div>
+            <div className="val">{stockData.length || "–"}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Stok Aman</div>
+            <div className="val" style={{ color: "var(--sage)" }}>{aman}</div>
+          </div>
+          <div className="stat-cell warn">
+            <div className="lbl">Stok Menipis</div>
+            <div className="val">{menipis}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Stok Habis</div>
+            <div className="val" style={{ color: "var(--rust)" }}>{habis}</div>
+          </div>
         </div>
-        <div className="stat-cell">
-          <div className="lbl">Stok Aman</div>
-          <div className="val" style={{ color: "var(--sage)" }}>{aman}</div>
-        </div>
-        <div className="stat-cell warn">
-          <div className="lbl">Stok Menipis</div>
-          <div className="val">{menipis}</div>
-        </div>
-        <div className="stat-cell">
-          <div className="lbl">Stok Habis</div>
-          <div className="val" style={{ color: "var(--rust)" }}>{habis}</div>
-        </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-head">
@@ -153,9 +158,7 @@ export default function StokBarangPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && (
-                <tr><td colSpan={5} className="loading-row">Memuat data stok...</td></tr>
-              )}
+              {loading && <SkeletonTableRows cols={5} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={5} className="empty-row">Tidak ada produk yang cocok.</td></tr>
               )}

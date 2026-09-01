@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonStatRow, SkeletonTableRows } from "@/components/Skeleton";
 import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseTanggalToDate, parseAngkaIndonesia } from "@/lib/dashboardUtils";
 
 export default function SupplierPage() {
@@ -95,20 +96,24 @@ export default function SupplierPage() {
         </>
       }
     >
-      <div className="stat-row">
-        <div className="stat-cell">
-          <div className="lbl">Total Supplier</div>
-          <div className="val">{suppliers.length || "–"}</div>
+      {loading ? (
+        <SkeletonStatRow count={3} />
+      ) : (
+        <div className="stat-row">
+          <div className="stat-cell">
+            <div className="lbl">Total Supplier</div>
+            <div className="val">{suppliers.length || "–"}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Total Transaksi</div>
+            <div className="val">{totalTransaksi}</div>
+          </div>
+          <div className="stat-cell accent">
+            <div className="lbl">Total Nilai Pembelian</div>
+            <div className="val small">{formatRupiah(totalNilai)}</div>
+          </div>
         </div>
-        <div className="stat-cell">
-          <div className="lbl">Total Transaksi</div>
-          <div className="val">{totalTransaksi}</div>
-        </div>
-        <div className="stat-cell accent">
-          <div className="lbl">Total Nilai Pembelian</div>
-          <div className="val small">{formatRupiah(totalNilai)}</div>
-        </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-head">
@@ -133,7 +138,7 @@ export default function SupplierPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="loading-row">Memuat data...</td></tr>}
+              {loading && <SkeletonTableRows cols={5} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={5} className="empty-row">Belum ada data supplier yang tercatat.</td></tr>
               )}

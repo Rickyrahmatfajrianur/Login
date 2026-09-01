@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonStatRow, SkeletonTableRows } from "@/components/Skeleton";
 import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia } from "@/lib/dashboardUtils";
 
 export default function PenjualanPage() {
@@ -84,20 +85,24 @@ export default function PenjualanPage() {
         </>
       }
     >
-      <div className="stat-row">
-        <div className="stat-cell">
-          <div className="lbl">Total Transaksi</div>
-          <div className="val">{data.length || "–"}</div>
+      {loading ? (
+        <SkeletonStatRow count={3} />
+      ) : (
+        <div className="stat-row">
+          <div className="stat-cell">
+            <div className="lbl">Total Transaksi</div>
+            <div className="val">{data.length || "–"}</div>
+          </div>
+          <div className="stat-cell accent">
+            <div className="lbl">Total Penjualan</div>
+            <div className="val small">{formatRupiah(totalNilai)}</div>
+          </div>
+          <div className="stat-cell profit">
+            <div className="lbl">Total Profit</div>
+            <div className="val small">{formatRupiah(totalProfit)}</div>
+          </div>
         </div>
-        <div className="stat-cell accent">
-          <div className="lbl">Total Penjualan</div>
-          <div className="val small">{formatRupiah(totalNilai)}</div>
-        </div>
-        <div className="stat-cell profit">
-          <div className="lbl">Total Profit</div>
-          <div className="val small">{formatRupiah(totalProfit)}</div>
-        </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-head">
@@ -122,7 +127,7 @@ export default function PenjualanPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={7} className="loading-row">Memuat data...</td></tr>}
+              {loading && <SkeletonTableRows cols={7} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={7} className="empty-row">Belum ada transaksi penjualan yang tercatat.</td></tr>
               )}

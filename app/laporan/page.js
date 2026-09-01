@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonStatRow, SkeletonTableRows } from "@/components/Skeleton";
 import {
   CSV_URLS,
   fetchCsvRows,
@@ -253,24 +254,28 @@ export default function LaporanPage() {
       </div>
 
       <div className="section-lbl">Ringkasan {periodeLabel}</div>
-      <div className="stat-row fin">
-        <div className="stat-cell accent">
-          <div className="lbl">Total Penjualan</div>
-          <div className="val small">{formatRupiah(totalPenjualan)}</div>
+      {loading ? (
+        <SkeletonStatRow count={4} />
+      ) : (
+        <div className="stat-row fin">
+          <div className="stat-cell accent">
+            <div className="lbl">Total Penjualan</div>
+            <div className="val small">{formatRupiah(totalPenjualan)}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Total Pembelian</div>
+            <div className="val small">{formatRupiah(totalPembelian)}</div>
+          </div>
+          <div className="stat-cell profit">
+            <div className="lbl">Laba Kotor</div>
+            <div className="val small">{formatRupiah(labaKotor)}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Total Transaksi</div>
+            <div className="val">{penjualanPeriode.length + restokPeriode.length}</div>
+          </div>
         </div>
-        <div className="stat-cell">
-          <div className="lbl">Total Pembelian</div>
-          <div className="val small">{formatRupiah(totalPembelian)}</div>
-        </div>
-        <div className="stat-cell profit">
-          <div className="lbl">Laba Kotor</div>
-          <div className="val small">{formatRupiah(labaKotor)}</div>
-        </div>
-        <div className="stat-cell">
-          <div className="lbl">Total Transaksi</div>
-          <div className="val">{penjualanPeriode.length + restokPeriode.length}</div>
-        </div>
-      </div>
+      )}
 
       <div className="section-lbl">Detail Penjualan</div>
       <div className="panel" style={{ marginBottom: 20 }}>
@@ -280,7 +285,7 @@ export default function LaporanPage() {
               <tr><th>Tanggal</th><th>Produk</th><th>Customer</th><th>Jumlah</th><th>Harga Akhir</th></tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="loading-row">Memuat...</td></tr>}
+              {loading && <SkeletonTableRows cols={5} rows={4} />}
               {!loading && penjualanPeriode.length === 0 && <tr><td colSpan={5} className="empty-row">Tidak ada transaksi penjualan di periode ini.</td></tr>}
               {!loading && penjualanPeriode.map((p, i) => (
                 <tr key={i}>
@@ -304,7 +309,7 @@ export default function LaporanPage() {
               <tr><th>Tanggal</th><th>Produk</th><th>Distributor</th><th>Jumlah</th><th>Total</th></tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={5} className="loading-row">Memuat...</td></tr>}
+              {loading && <SkeletonTableRows cols={5} rows={4} />}
               {!loading && restokPeriode.length === 0 && <tr><td colSpan={5} className="empty-row">Tidak ada transaksi restok di periode ini.</td></tr>}
               {!loading && restokPeriode.map((r, i) => (
                 <tr key={i}>

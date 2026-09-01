@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonStatRow } from "@/components/Skeleton";
 import { createClient } from "@/lib/supabase/client";
 import {
   AreaChart,
@@ -118,6 +119,7 @@ export default function RingkasanPage() {
   const trend = useMemo(() => computeTrend(penjualanRaw, period), [penjualanRaw, period]);
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const supabase = createClient();
 
   async function loadData() {
@@ -261,6 +263,8 @@ export default function RingkasanPage() {
     } catch (err) {
       console.warn("Gagal memuat ringkasan:", err);
       setLastSync("Gagal memuat");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -298,52 +302,60 @@ export default function RingkasanPage() {
       }
     >
       <div className="section-lbl">Ringkasan Produk</div>
-      <div className="stat-row">
-        <div className="stat-cell">
-          <div className="lbl">Total Produk</div>
-          <div className="val">{stats.totalProduk || "–"}</div>
+      {loading ? (
+        <SkeletonStatRow count={3} />
+      ) : (
+        <div className="stat-row">
+          <div className="stat-cell">
+            <div className="lbl">Total Produk</div>
+            <div className="val">{stats.totalProduk || "–"}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Total Unit Stok</div>
+            <div className="val">{stats.totalUnit.toLocaleString("id-ID")}</div>
+          </div>
+          <div className="stat-cell warn">
+            <div className="lbl">Perlu Perhatian</div>
+            <div className="val">{stats.menipis + stats.habis}</div>
+          </div>
         </div>
-        <div className="stat-cell">
-          <div className="lbl">Total Unit Stok</div>
-          <div className="val">{stats.totalUnit.toLocaleString("id-ID")}</div>
-        </div>
-        <div className="stat-cell warn">
-          <div className="lbl">Perlu Perhatian</div>
-          <div className="val">{stats.menipis + stats.habis}</div>
-        </div>
-      </div>
+      )}
 
       <div className="section-lbl">Ringkasan Keuangan</div>
-      <div className="stat-row fin">
-        <div className="stat-cell accent">
-          <div className="cell-top">
-            <div className="lbl">Penjualan Hari Ini</div>
-            <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+      {loading ? (
+        <SkeletonStatRow count={4} />
+      ) : (
+        <div className="stat-row fin">
+          <div className="stat-cell accent">
+            <div className="cell-top">
+              <div className="lbl">Penjualan Hari Ini</div>
+              <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" /><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" /></svg>
+            </div>
+            <div className="val small">{formatRupiah(stats.penjualanHariIni)}</div>
           </div>
-          <div className="val small">{formatRupiah(stats.penjualanHariIni)}</div>
-        </div>
-        <div className="stat-cell accent">
-          <div className="cell-top">
-            <div className="lbl">Penjualan Bulan Ini</div>
-            <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          <div className="stat-cell accent">
+            <div className="cell-top">
+              <div className="lbl">Penjualan Bulan Ini</div>
+              <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+            </div>
+            <div className="val small">{formatRupiah(stats.penjualanBulanIni)}</div>
           </div>
-          <div className="val small">{formatRupiah(stats.penjualanBulanIni)}</div>
-        </div>
-        <div className="stat-cell">
-          <div className="cell-top">
-            <div className="lbl">Pembelian Bulan Ini</div>
-            <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7" /></svg>
+          <div className="stat-cell">
+            <div className="cell-top">
+              <div className="lbl">Pembelian Bulan Ini</div>
+              <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7" /></svg>
+            </div>
+            <div className="val small">{formatRupiah(stats.pembelianBulanIni)}</div>
           </div>
-          <div className="val small">{formatRupiah(stats.pembelianBulanIni)}</div>
-        </div>
-        <div className="stat-cell profit">
-          <div className="cell-top">
-            <div className="lbl">Laba Kotor Bulan Ini</div>
-            <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+          <div className="stat-cell profit">
+            <div className="cell-top">
+              <div className="lbl">Laba Kotor Bulan Ini</div>
+              <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+            </div>
+            <div className="val small">{formatRupiah(stats.labaKotorBulanIni)}</div>
           </div>
-          <div className="val small">{formatRupiah(stats.labaKotorBulanIni)}</div>
         </div>
-      </div>
+      )}
 
       <div className="section-lbl">Tren Penjualan</div>
       <div className="panels-trend">

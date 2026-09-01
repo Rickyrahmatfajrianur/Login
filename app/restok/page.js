@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { SkeletonStatRow, SkeletonTableRows } from "@/components/Skeleton";
 import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia, parseTanggalToDate } from "@/lib/dashboardUtils";
 
 const BULAN_LABEL = [
@@ -104,24 +105,28 @@ export default function RestokPage() {
         </>
       }
     >
-      <div className="stat-row fin">
-        <div className="stat-cell">
-          <div className="lbl">Total Transaksi</div>
-          <div className="val">{dataPeriode.length || "–"}</div>
+      {loading ? (
+        <SkeletonStatRow count={4} />
+      ) : (
+        <div className="stat-row fin">
+          <div className="stat-cell">
+            <div className="lbl">Total Transaksi</div>
+            <div className="val">{dataPeriode.length || "–"}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Total Barang Masuk</div>
+            <div className="val">{dataPeriode.reduce((s, p) => s + (parseFloat(p.banyak) || 0), 0)}</div>
+          </div>
+          <div className="stat-cell accent">
+            <div className="lbl">Total Nilai Pembelian</div>
+            <div className="val small">{formatRupiah(totalNilai)}</div>
+          </div>
+          <div className="stat-cell">
+            <div className="lbl">Restok Terakhir</div>
+            <div className="val small">{terakhir}</div>
+          </div>
         </div>
-        <div className="stat-cell">
-          <div className="lbl">Total Barang Masuk</div>
-          <div className="val">{dataPeriode.reduce((s, p) => s + (parseFloat(p.banyak) || 0), 0)}</div>
-        </div>
-        <div className="stat-cell accent">
-          <div className="lbl">Total Nilai Pembelian</div>
-          <div className="val small">{formatRupiah(totalNilai)}</div>
-        </div>
-        <div className="stat-cell">
-          <div className="lbl">Restok Terakhir</div>
-          <div className="val small">{terakhir}</div>
-        </div>
-      </div>
+      )}
 
       <div className="panel">
         <div className="panel-head">
@@ -159,7 +164,7 @@ export default function RestokPage() {
               </tr>
             </thead>
             <tbody>
-              {loading && <tr><td colSpan={8} className="loading-row">Memuat data...</td></tr>}
+              {loading && <SkeletonTableRows cols={8} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr><td colSpan={8} className="empty-row">Tidak ada transaksi restok pada periode ini.</td></tr>
               )}
