@@ -218,6 +218,15 @@ export default function RestokPage() {
     }
   }
 
+  // Daftar nama distributor unik dari riwayat restok yang sudah ada, buat prediksi/autocomplete.
+  const distributorList = useMemo(() => {
+    const set = new Set();
+    data.forEach((p) => {
+      if (p.distributor) set.add(p.distributor);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "id"));
+  }, [data]);
+
   const dataPeriode = useMemo(() => {
     if (filterBulan === "semua") return data;
     return data.filter((p) => {
@@ -374,7 +383,18 @@ export default function RestokPage() {
                 </div>
                 <div className="field" style={{ flex: 1, minWidth: 160 }}>
                   <label>Distributor</label>
-                  <input type="text" placeholder="Nama distributor" value={form.distributor} onChange={(e) => setForm({ ...form, distributor: e.target.value })} />
+                  <input
+                    type="text"
+                    list="daftar-distributor"
+                    placeholder="Nama distributor"
+                    value={form.distributor}
+                    onChange={(e) => setForm({ ...form, distributor: e.target.value })}
+                  />
+                  <datalist id="daftar-distributor">
+                    {distributorList.map((nama) => (
+                      <option key={nama} value={nama} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="field" style={{ flex: 1, minWidth: 140 }}>
                   <label>Status</label>
