@@ -81,6 +81,7 @@ export default function PengaturanPage() {
     setConfirmError("");
     setConfirmPassword("");
     setConfirmAction({ type: "editAccess", payload: { id: editingAccessUser.id, email: editingAccessUser.email, allowedPages: editPages } });
+    setEditingAccessUser(null); // tutup modal Edit Akses dulu, biar nggak numpuk di belakang modal konfirmasi password
   }
 
   // Langkah 2: setelah password dikonfirmasi benar, baru eksekusi tambah/hapus/ubah izin
