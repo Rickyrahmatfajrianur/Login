@@ -70,25 +70,31 @@ function computeTrend(penjualanList, period) {
 
     for (let tgl = 1; tgl <= hariTerakhir; tgl++) {
       const d = new Date(targetYear, targetMonth, tgl);
-      points.push({ matchDate: d.toDateString(), label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0 });
+      points.push({ matchDate: d.toDateString(), label: d.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), value: 0, profit: 0 });
     }
     penjualanList.forEach((p) => {
       const d = parseTanggalToDate(p.tanggal);
       if (!d) return;
       const match = points.find((pt) => pt.matchDate === d.toDateString());
-      if (match) match.value += p.hargaAkhir;
+      if (match) {
+        match.value += p.hargaAkhir;
+        match.profit += p.profit;
+      }
     });
   } else {
     const numMonths = parseInt(period, 10);
     for (let i = numMonths - 1; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      points.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleDateString("id-ID", { month: "short", year: "2-digit" }), value: 0 });
+      points.push({ month: d.getMonth(), year: d.getFullYear(), label: d.toLocaleDateString("id-ID", { month: "short", year: "2-digit" }), value: 0, profit: 0 });
     }
     penjualanList.forEach((p) => {
       const d = parseTanggalToDate(p.tanggal);
       if (!d) return;
       const match = points.find((pt) => pt.month === d.getMonth() && pt.year === d.getFullYear());
-      if (match) match.value += p.hargaAkhir;
+      if (match) {
+        match.value += p.hargaAkhir;
+        match.profit += p.profit;
+      }
     });
   }
 
@@ -107,6 +113,8 @@ export default function RingkasanPage() {
   const [kategoriTerlaris, setKategoriTerlaris] = useState([]);
   const [penjualanRaw, setPenjualanRaw] = useState([]);
   const [period, setPeriod] = useState("bulan_ini");
+  const [showPenjualan, setShowPenjualan] = useState(true);
+  const [showLaba, setShowLaba] = useState(true);
   const trend = useMemo(() => computeTrend(penjualanRaw, period), [penjualanRaw, period]);
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
@@ -348,12 +356,28 @@ export default function RingkasanPage() {
               ))}
             </select>
           </div>
+          <div className="chart-legend-toggle">
+            <label>
+              <input type="checkbox" checked={showPenjualan} onChange={(e) => setShowPenjualan(e.target.checked)} />
+              <span className="dot" style={{ background: "#0B6FDB" }}></span>
+              Tren Penjualan
+            </label>
+            <label>
+              <input type="checkbox" checked={showLaba} onChange={(e) => setShowLaba(e.target.checked)} />
+              <span className="dot" style={{ background: "#4F7A5C" }}></span>
+              Laba Kotor
+            </label>
+          </div>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart data={trend.points} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
-                <linearGradient id="chartFade" x1="0" y1="0" x2="0" y2="1">
+                <linearGradient id="chartFadePenjualan" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#0B6FDB" stopOpacity={0.22} />
                   <stop offset="100%" stopColor="#0B6FDB" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="chartFadeLaba" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#4F7A5C" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="#4F7A5C" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke="var(--line)" />
@@ -371,16 +395,31 @@ export default function RingkasanPage() {
                 tick={{ fontSize: 10, fill: "var(--ink-faint)" }}
                 tickFormatter={formatAxisLabel}
               />
-              <RechartsTooltip content={<TrendTooltip />} />
-              <Area
-                type="monotone"
-                dataKey="value"
-                stroke="#0B6FDB"
-                strokeWidth={2.5}
-                fill="url(#chartFade)"
-                dot={{ r: 3, fill: "#fff", stroke: "#0B6FDB", strokeWidth: 2 }}
-                activeDot={{ r: 5, fill: "#0B6FDB", stroke: "#fff", strokeWidth: 2 }}
-              />
+              <RechartsTooltip content={<TrendTooltip showPenjualan={showPenjualan} showLaba={showLaba} />} />
+              {showPenjualan && (
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  name="Tren Penjualan"
+                  stroke="#0B6FDB"
+                  strokeWidth={2.5}
+                  fill="url(#chartFadePenjualan)"
+                  dot={{ r: 3, fill: "#fff", stroke: "#0B6FDB", strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: "#0B6FDB", stroke: "#fff", strokeWidth: 2 }}
+                />
+              )}
+              {showLaba && (
+                <Area
+                  type="monotone"
+                  dataKey="profit"
+                  name="Laba Kotor"
+                  stroke="#4F7A5C"
+                  strokeWidth={2.5}
+                  fill="url(#chartFadeLaba)"
+                  dot={{ r: 3, fill: "#fff", stroke: "#4F7A5C", strokeWidth: 2 }}
+                  activeDot={{ r: 5, fill: "#4F7A5C", stroke: "#fff", strokeWidth: 2 }}
+                />
+              )}
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -508,12 +547,19 @@ export default function RingkasanPage() {
   );
 }
 
-function TrendTooltip({ active, payload, label }) {
+function TrendTooltip({ active, payload, label, showPenjualan, showLaba }) {
   if (!active || !payload || payload.length === 0) return null;
+  const penjualanEntry = payload.find((p) => p.dataKey === "value");
+  const labaEntry = payload.find((p) => p.dataKey === "profit");
   return (
     <div className="chart-tooltip show" style={{ position: "static", transform: "none" }}>
       <div className="tt-date">{label} {new Date().getFullYear()}</div>
-      <div className="tt-val">{formatRupiahPenuh(payload[0].value)}</div>
+      {showPenjualan && penjualanEntry && (
+        <div className="tt-val" style={{ color: "#0B6FDB" }}>Penjualan: {formatRupiahPenuh(penjualanEntry.value)}</div>
+      )}
+      {showLaba && labaEntry && (
+        <div className="tt-val" style={{ color: "#4F7A5C" }}>Laba: {formatRupiahPenuh(labaEntry.value)}</div>
+      )}
     </div>
   );
 }
