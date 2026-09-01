@@ -3,12 +3,27 @@
 import { useEffect, useMemo, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { SkeletonStatRow, SkeletonTableRows } from "@/components/Skeleton";
+import { createClient } from "@/lib/supabase/client";
 import { CSV_URLS, fetchCsvRows, findHeaderRow, formatRupiah, formatTanggal, parseAngkaIndonesia, parseTanggalToDate } from "@/lib/dashboardUtils";
 
 const BULAN_LABEL = [
   "Januari", "Februari", "Maret", "April", "Mei", "Juni",
   "Juli", "Agustus", "September", "Oktober", "November", "Desember",
 ];
+
+function todayISO() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function itemKosong() {
+  return { nama: "", banyak: "", harga: "" };
+}
+
+function formKosong() {
+  return { tanggal: todayISO(), distributor: "", status: "Cash", items: [itemKosong()] };
+}
 
 export default function RestokPage() {
   const [data, setData] = useState([]);
@@ -18,6 +33,17 @@ export default function RestokPage() {
   const [filterTahun, setFilterTahun] = useState(new Date().getFullYear());
   const [lastSync, setLastSync] = useState("Memuat...");
   const [refreshing, setRefreshing] = useState(false);
+
+  // Form "+ Tambah Restok"
+  const [namaBarangList, setNamaBarangList] = useState([]);
+  const [scriptUrl, setScriptUrl] = useState("");
+  const [scriptKey, setScriptKey] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(formKosong());
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [toast, setToast] = useState("");
+  const supabase = createClient();
 
   async function loadData() {
     try {
@@ -59,14 +85,137 @@ export default function RestokPage() {
     }
   }
 
+  // Daftar nama barang dari DAFTAR BARANG, buat prediksi/autocomplete di form restok.
+  async function loadNamaBarang() {
+    try {
+      const rows = await fetchCsvRows(CSV_URLS.stok);
+      const headerIdx = findHeaderRow(rows, ["kode barang", "nama barang"]);
+      if (headerIdx === -1) return;
+      const header = rows[headerIdx].map((c) => (c || "").toString().trim().toLowerCase());
+      const idxNama = header.indexOf("nama barang");
+      if (idxNama === -1) return;
+
+      const namaSet = new Set();
+      rows.slice(headerIdx + 1).forEach((r) => {
+        const nama = (r[idxNama] || "").toString().trim();
+        if (nama) namaSet.add(nama);
+      });
+      setNamaBarangList(Array.from(namaSet).sort((a, b) => a.localeCompare(b, "id")));
+    } catch (err) {
+      console.warn("Gagal memuat daftar nama barang:", err);
+    }
+  }
+
+  async function loadScriptSettings() {
+    try {
+      const { data: row } = await supabase.from("settings").select("kasir_script_url, kasir_script_key").eq("id", 1).single();
+      if (row) {
+        setScriptUrl(row.kasir_script_url || "");
+        setScriptKey(row.kasir_script_key || "");
+      }
+    } catch (err) {
+      console.warn("Gagal memuat pengaturan script:", err);
+    }
+  }
+
   useEffect(() => {
     loadData();
+    loadNamaBarang();
+    loadScriptSettings();
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   async function handleRefresh() {
     setRefreshing(true);
-    await loadData();
+    await Promise.all([loadData(), loadNamaBarang()]);
     setTimeout(() => setRefreshing(false), 400);
+  }
+
+  function openForm() {
+    setForm(formKosong());
+    setFormError("");
+    setShowForm(true);
+  }
+
+  function closeForm() {
+    setShowForm(false);
+  }
+
+  function updateItem(idx, field, value) {
+    setForm((prev) => {
+      const items = prev.items.slice();
+      items[idx] = { ...items[idx], [field]: value };
+      return { ...prev, items };
+    });
+  }
+
+  function addItemRow() {
+    setForm((prev) => ({ ...prev, items: [...prev.items, itemKosong()] }));
+  }
+
+  function removeItemRow(idx) {
+    setForm((prev) => {
+      if (prev.items.length <= 1) return prev; // minimal 1 baris
+      return { ...prev, items: prev.items.filter((_, i) => i !== idx) };
+    });
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setFormError("");
+
+    if (!scriptUrl || !scriptKey) {
+      setFormError("URL/Key Google Apps Script belum diisi di halaman Pengaturan.");
+      return;
+    }
+    if (!form.tanggal) {
+      setFormError("Tanggal wajib diisi.");
+      return;
+    }
+
+    const itemsValid = form.items
+      .map((it) => ({
+        nama_barang: it.nama.trim(),
+        banyak: parseFloat(it.banyak),
+        harga_beli: parseFloat(it.harga),
+      }))
+      .filter((it) => it.nama_barang && it.banyak > 0 && it.harga_beli >= 0);
+
+    if (itemsValid.length === 0) {
+      setFormError("Isi minimal 1 barang dengan Nama, Banyak, dan Harga Beli yang valid.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          key: scriptKey,
+          aksi: "restok",
+          tanggal: form.tanggal,
+          distributor: form.distributor.trim(),
+          status: form.status,
+          items: itemsValid,
+        }),
+      });
+      const result = await res.json();
+      if (result?.error) throw new Error(result.error);
+
+      setShowForm(false);
+      setToast(`Restok tersimpan (${itemsValid.length} barang).`);
+      await Promise.all([loadData(), loadNamaBarang()]);
+    } catch (err) {
+      console.warn("Gagal menyimpan restok:", err);
+      setFormError("Gagal menyimpan ke spreadsheet. Cek koneksi internet lalu coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const dataPeriode = useMemo(() => {
@@ -102,9 +251,33 @@ export default function RestokPage() {
             </svg>
             Refresh
           </button>
+          <button className="btn-primary" style={{ padding: "10px 16px" }} onClick={openForm}>
+            + Tambah Restok
+          </button>
         </>
       }
     >
+      {toast && (
+        <div className="setup-banner" style={{ display: "flex", background: "var(--sage-soft)", border: "1px solid var(--sage)", marginBottom: 16 }}>
+          <div className="setup-ic">✅</div>
+          <div>
+            <b style={{ color: "var(--sage)" }}>{toast}</b>
+          </div>
+        </div>
+      )}
+
+      {(!scriptUrl || !scriptKey) && (
+        <div className="setup-banner" style={{ display: "flex", background: "#FFF3E0", border: "1px solid #FFD8A8", marginBottom: 16 }}>
+          <div className="setup-ic">⚠️</div>
+          <div>
+            <b style={{ color: "var(--brand-deep)" }}>URL/Key Apps Script belum diisi</b>
+            <p style={{ color: "var(--brand-deep)" }}>
+              Isi dulu di halaman Pengaturan (kolom yang sama dipakai Kasir) supaya tombol &quot;+ Tambah Restok&quot; bisa menyimpan ke spreadsheet.
+            </p>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <SkeletonStatRow count={4} />
       ) : (
@@ -185,6 +358,105 @@ export default function RestokPage() {
           </table>
         </div>
       </div>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={closeForm}>
+          <div className="modal-card" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
+            <h2>+ Tambah Restok</h2>
+
+            <form className="modal-form" onSubmit={handleSubmit}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                  <label>Tanggal</label>
+                  <input type="date" value={form.tanggal} onChange={(e) => setForm({ ...form, tanggal: e.target.value })} required />
+                </div>
+                <div className="field" style={{ flex: 1, minWidth: 160 }}>
+                  <label>Distributor</label>
+                  <input type="text" placeholder="Nama distributor" value={form.distributor} onChange={(e) => setForm({ ...form, distributor: e.target.value })} />
+                </div>
+                <div className="field" style={{ flex: 1, minWidth: 140 }}>
+                  <label>Status</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14 }}
+                  >
+                    <option value="Cash">Cash</option>
+                    <option value="Titipan">Titipan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "var(--slate600)" }}>Barang</label>
+                <datalist id="daftar-nama-barang">
+                  {namaBarangList.map((nama) => (
+                    <option key={nama} value={nama} />
+                  ))}
+                </datalist>
+
+                {form.items.map((item, idx) => (
+                  <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 10, flexWrap: "wrap" }}>
+                    <div className="field" style={{ flex: 3, minWidth: 160 }}>
+                      {idx === 0 && <label>Nama Barang</label>}
+                      <input
+                        type="text"
+                        list="daftar-nama-barang"
+                        placeholder="Ketik nama barang..."
+                        value={item.nama}
+                        onChange={(e) => updateItem(idx, "nama", e.target.value)}
+                      />
+                    </div>
+                    <div className="field" style={{ flex: 1, minWidth: 90 }}>
+                      {idx === 0 && <label>Banyak</label>}
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={item.banyak}
+                        onChange={(e) => updateItem(idx, "banyak", e.target.value)}
+                      />
+                    </div>
+                    <div className="field" style={{ flex: 1.4, minWidth: 120 }}>
+                      {idx === 0 && <label>Harga Beli/Pcs</label>}
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="0"
+                        value={item.harga}
+                        onChange={(e) => updateItem(idx, "harga", e.target.value)}
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-delete"
+                      onClick={() => removeItemRow(idx)}
+                      disabled={form.items.length <= 1}
+                      style={{ height: 44 }}
+                      title="Hapus baris ini"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+
+                <button type="button" onClick={addItemRow} className="btn-cancel" style={{ marginTop: 10, padding: "8px 14px" }}>
+                  + Tambah Baris Barang
+                </button>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={closeForm}>Batal</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? "Menyimpan..." : "Simpan Restok"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 }
