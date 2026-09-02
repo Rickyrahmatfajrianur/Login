@@ -361,6 +361,33 @@ td.stok-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; 
 .btn-edit{ color:var(--brand); }
 .btn-delete{ color:var(--red); }
 
+/* ===== Master Produk v2: tabs, bulk bar, chip, dropdown ===== */
+.tabs-row{ display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
+.tab-btn{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); font-size:13px; font-weight:600; padding:7px 14px; border-radius:9px; font-family:inherit; cursor:pointer; }
+.tab-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+.toolbar-row2{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+.toolbar-row2 select{ border:1.5px solid var(--line); border-radius:10px; padding:9px 13px; font-size:13px; color:var(--ink-soft); background:var(--card); font-family:inherit; }
+.btn-outline{ background:var(--card); border:1.5px solid var(--line); color:var(--ink); font-size:13px; font-weight:600; padding:9px 14px; border-radius:10px; font-family:inherit; cursor:pointer; }
+.btn-outline:hover{ background:var(--paper); }
+.bulk-bar{ display:flex; align-items:center; gap:12px; background:var(--brand-soft); border:1px solid var(--brand); border-radius:12px; padding:10px 16px; margin-bottom:14px; font-size:13.5px; flex-wrap:wrap; }
+.bulk-bar b{ color:var(--brand-deep); }
+.bulk-bar .spacer{ flex:1; }
+.prod-cell{ display:flex; align-items:center; gap:12px; }
+.prod-thumb{ width:38px; height:38px; border-radius:10px; background:var(--paper); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+.prod-thumb img{ width:100%; height:100%; object-fit:cover; }
+.prod-thumb-empty{ font-size:15px; color:var(--ink-faint); }
+.prod-name-cell .name{ font-weight:700; font-size:13.5px; }
+.prod-name-cell .sub{ font-size:11.5px; color:var(--ink-faint); margin-top:2px; }
+.chip{ display:inline-block; border:1px solid var(--line); border-radius:7px; padding:3px 10px; font-size:11.5px; font-weight:600; color:var(--ink-soft); background:var(--paper); }
+.row-menu-wrap{ position:relative; display:inline-block; }
+.btn-dots{ border:none; background:none; font-size:16px; font-weight:700; color:var(--ink-faint); cursor:pointer; padding:4px 9px; border-radius:6px; letter-spacing:1px; }
+.btn-dots:hover{ background:var(--paper); }
+.row-menu-overlay{ position:fixed; inset:0; z-index:4; }
+.row-menu{ position:absolute; right:0; top:100%; margin-top:4px; background:var(--card); border:1px solid var(--line); border-radius:10px; box-shadow:var(--shadow-md); overflow:hidden; z-index:5; min-width:140px; }
+.row-menu button{ display:block; width:100%; text-align:left; background:none; border:none; padding:9px 14px; font-size:13px; font-family:inherit; cursor:pointer; color:var(--ink); }
+.row-menu button:hover{ background:var(--paper); }
+.row-menu button.danger{ color:var(--red); }
+
 .modal-overlay{ position:fixed; inset:0; background:rgba(11,42,68,0.5); display:flex; align-items:center; justify-content:center; padding:20px; z-index:50; }
 .modal-card{ background:var(--card); border-radius:18px; padding:28px; max-width:520px; width:100%; max-height:88vh; overflow-y:auto; }
 .modal-card h2{ font-size:18px; margin-bottom:18px; }

@@ -54,6 +54,10 @@ export default function ProdukPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("semua"); // semua | tampil | disembunyikan
+  const [catFilter, setCatFilter] = useState("semua");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [openMenuId, setOpenMenuId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -121,6 +125,7 @@ export default function ProdukPage() {
   }
 
   function openEditModal(p) {
+    setOpenMenuId(null);
     setEditingId(p.id);
     setForm({
       id: p.id,
@@ -179,48 +184,146 @@ export default function ProdukPage() {
   }
 
   async function handleDelete(id) {
+    setOpenMenuId(null);
     if (!confirm("Yakin ingin menghapus produk ini?")) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (!error) loadProducts();
   }
 
-  const filtered = products.filter((p) =>
-    p.name.toLowerCase().includes(search.toLowerCase())
-  );
+  async function handleToggleHidden(p) {
+    setOpenMenuId(null);
+    const { error } = await supabase.from("products").update({ is_hidden: !p.is_hidden }).eq("id", p.id);
+    if (!error) loadProducts();
+  }
+
+  function toggleSelect(id) {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.length === filtered.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((p) => p.id));
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (!confirm(`Yakin ingin menghapus ${selectedIds.length} produk yang dipilih?`)) return;
+    const { error } = await supabase.from("products").delete().in("id", selectedIds);
+    if (!error) {
+      setSelectedIds([]);
+      loadProducts();
+    }
+  }
+
+  async function handleBulkVisibility(hide) {
+    const { error } = await supabase.from("products").update({ is_hidden: hide }).in("id", selectedIds);
+    if (!error) {
+      setSelectedIds([]);
+      loadProducts();
+    }
+  }
+
+  function handleExportCsv() {
+    const header = ["ID", "Nama Produk", "Kategori", "Ukuran", "Harga", "Harga Grosir", "Status", "Diperbarui"];
+    const escapeCsv = (val) => `"${String(val ?? "").replace(/"/g, '""')}"`;
+    const rows = filtered.map((p) => [
+      p.id,
+      p.name,
+      CATEGORIES.find((c) => c.id === p.cat)?.label || p.cat,
+      p.size || "",
+      p.price ?? "",
+      p.price_grosir ?? "",
+      p.is_hidden ? "Disembunyikan" : "Tampil",
+      p.updated_at ? new Date(p.updated_at).toLocaleDateString("id-ID") : "",
+    ]);
+    const csv = [header, ...rows].map((r) => r.map(escapeCsv).join(",")).join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `master-produk-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const countTampil = products.filter((p) => !p.is_hidden).length;
+  const countDisembunyikan = products.filter((p) => p.is_hidden).length;
+
+  const filtered = products.filter((p) => {
+    const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase());
+    const matchCat = catFilter === "semua" || p.cat === catFilter;
+    const matchStatus =
+      statusFilter === "semua" || (statusFilter === "tampil" ? !p.is_hidden : p.is_hidden);
+    return matchSearch && matchCat && matchStatus;
+  });
 
   return (
     <DashboardLayout title="Master Produk">
-      <div className="toolbar">
+      <div className="tabs-row">
+        <button className={`tab-btn ${statusFilter === "semua" ? "active" : ""}`} onClick={() => setStatusFilter("semua")}>
+          Semua ({products.length})
+        </button>
+        <button className={`tab-btn ${statusFilter === "tampil" ? "active" : ""}`} onClick={() => setStatusFilter("tampil")}>
+          Tampil ({countTampil})
+        </button>
+        <button className={`tab-btn ${statusFilter === "disembunyikan" ? "active" : ""}`} onClick={() => setStatusFilter("disembunyikan")}>
+          Disembunyikan ({countDisembunyikan})
+        </button>
+      </div>
+
+      <div className="toolbar-row2">
         <input
           type="text"
           placeholder="Cari produk..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          style={{ flex: 1, minWidth: 200, border: "1.5px solid var(--line)", borderRadius: 10, padding: "9px 13px", fontSize: 13.5 }}
         />
-        <button className="btn-add" onClick={openAddModal}>
-          + Tambah Produk
-        </button>
+        <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)}>
+          <option value="semua">Semua Kategori</option>
+          {CATEGORIES.map((c) => (
+            <option key={c.id} value={c.id}>{c.label}</option>
+          ))}
+        </select>
+        <button className="btn-outline" onClick={handleExportCsv}>⬇ Export</button>
+        <button className="btn-add" onClick={openAddModal}>+ Tambah Produk</button>
       </div>
+
+      {selectedIds.length > 0 && (
+        <div className="bulk-bar">
+          <b>{selectedIds.length} produk dipilih</b>
+          <div className="spacer" />
+          <button className="btn-outline" onClick={() => handleBulkVisibility(false)}>Tampilkan</button>
+          <button className="btn-outline" onClick={() => handleBulkVisibility(true)}>Sembunyikan</button>
+          <button className="btn-outline" style={{ color: "var(--red)" }} onClick={handleBulkDelete}>Hapus</button>
+          <button className="btn-outline" onClick={() => setSelectedIds([])}>Batal</button>
+        </div>
+      )}
 
       <div className="produk-table">
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Nama Produk</th>
+                <th style={{ width: 36 }}>
+                  <input type="checkbox" checked={filtered.length > 0 && selectedIds.length === filtered.length} onChange={toggleSelectAll} />
+                </th>
+                <th>Produk</th>
                 <th>Kategori</th>
-                <th>Ukuran</th>
                 <th>Harga</th>
                 <th>Harga Grosir</th>
                 <th>Status</th>
-                <th style={{ width: 120 }}>Aksi</th>
+                <th>Diperbarui</th>
+                <th style={{ width: 50 }}></th>
               </tr>
             </thead>
             <tbody>
-              {loading && <SkeletonTableRows cols={7} rows={6} />}
+              {loading && <SkeletonTableRows cols={8} rows={6} />}
               {!loading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={7} style={{ textAlign: "center", padding: 30 }}>
+                  <td colSpan={8} style={{ textAlign: "center", padding: 30 }}>
                     Tidak ada produk yang cocok.
                   </td>
                 </tr>
@@ -228,9 +331,21 @@ export default function ProdukPage() {
               {!loading &&
                 filtered.map((p) => (
                   <tr key={p.id}>
-                    <td>{p.name}</td>
-                    <td>{CATEGORIES.find((c) => c.id === p.cat)?.label || p.cat}</td>
-                    <td>{p.size || "-"}</td>
+                    <td>
+                      <input type="checkbox" checked={selectedIds.includes(p.id)} onChange={() => toggleSelect(p.id)} />
+                    </td>
+                    <td>
+                      <div className="prod-cell">
+                        <div className="prod-thumb">
+                          {p.img ? <img src={p.img} alt={p.name} /> : <span className="prod-thumb-empty">📦</span>}
+                        </div>
+                        <div className="prod-name-cell">
+                          <div className="name">{p.name}</div>
+                          <div className="sub">{p.size || "-"}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><span className="chip">{CATEGORIES.find((c) => c.id === p.cat)?.label || p.cat}</span></td>
                     <td>{p.price ? "Rp " + Number(p.price).toLocaleString("id-ID") : "-"}</td>
                     <td>{p.price_grosir ? "Rp " + Number(p.price_grosir).toLocaleString("id-ID") : "-"}</td>
                     <td>
@@ -240,13 +355,21 @@ export default function ProdukPage() {
                         <span className="status-badge status-aman">Tampil</span>
                       )}
                     </td>
+                    <td>{p.updated_at ? new Date(p.updated_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}</td>
                     <td>
-                      <button className="btn-edit" onClick={() => openEditModal(p)}>
-                        Edit
-                      </button>
-                      <button className="btn-delete" onClick={() => handleDelete(p.id)}>
-                        Hapus
-                      </button>
+                      <div className="row-menu-wrap">
+                        <button className="btn-dots" onClick={() => setOpenMenuId(openMenuId === p.id ? null : p.id)}>⋯</button>
+                        {openMenuId === p.id && (
+                          <>
+                            <div className="row-menu-overlay" onClick={() => setOpenMenuId(null)} />
+                            <div className="row-menu">
+                              <button onClick={() => openEditModal(p)}>Edit</button>
+                              <button onClick={() => handleToggleHidden(p)}>{p.is_hidden ? "Tampilkan" : "Sembunyikan"}</button>
+                              <button className="danger" onClick={() => handleDelete(p.id)}>Hapus</button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
