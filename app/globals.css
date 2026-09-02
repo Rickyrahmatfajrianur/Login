@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
 :root{
-  --ink:#0A1A2E; --paper:#F6F7F5; --card:#FFFFFF;
+  --ink:#0A1A2E; --ink-solid:#0A1A2E; --paper:#F6F7F5; --card:#FFFFFF;
   --brand:#0B6FDB; --brand-deep:#073B73; --brand-soft:#E8F1FC;
   --sage:#4F7A5C; --sage-soft:#EAF2EC;
   --wheat:#B8862E; --wheat-soft:#F8F0E0;
@@ -18,7 +18,7 @@
   --t-base: 0.25s cubic-bezier(0.4,0,0.2,1);
 }
 [data-theme="dark"]{
-  --ink:#E8ECF1; --paper:#0D1520; --card:#161F2E;
+  --ink:#E8ECF1; --ink-solid:#0A1A2E; --paper:#0D1520; --card:#161F2E;
   --brand:#3B9EFF; --brand-deep:#7CC0FF; --brand-soft:rgba(59,158,255,0.14);
   --sage:#6FBF8A; --sage-soft:rgba(111,191,138,0.14);
   --wheat:#E0AC4E; --wheat-soft:rgba(224,172,78,0.14);
@@ -117,7 +117,7 @@ input, textarea, select{ font-family:inherit; }
 
 /* ===== Sidebar ===== */
 .dash-sidebar{
-  width:264px; flex-shrink:0; background:linear-gradient(180deg, var(--ink) 0%, #0D2540 100%);
+  width:264px; flex-shrink:0; background:linear-gradient(180deg, var(--ink-solid) 0%, #0D2540 100%);
   color:#fff; display:flex; flex-direction:column; padding:26px 16px; position:sticky; top:0; height:100vh; overflow-y:auto;
   transition:width .22s ease, padding .22s ease;
 }
@@ -327,7 +327,7 @@ select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding
 
 .chart-tooltip{
   position:absolute; pointer-events:none; opacity:0; transform:translate(-50%,-100%) translateY(-10px);
-  background:var(--ink); color:#fff; padding:9px 13px; border-radius:10px; font-size:12px;
+  background:var(--ink-solid); color:#fff; padding:9px 13px; border-radius:10px; font-size:12px;
   white-space:nowrap; box-shadow:0 10px 24px rgba(0,0,0,0.25); transition:opacity .12s ease; z-index:5;
 }
 .chart-tooltip.show{ opacity:1; }
@@ -519,7 +519,7 @@ td.stok-val{ font-family:'Inter',sans-serif; font-variant-numeric:tabular-nums; 
 
 .kasir-toast-container{ position:fixed; bottom:24px; right:24px; display:flex; flex-direction:column; gap:8px; z-index:100; }
 .kasir-toast{
-  display:flex; align-items:center; gap:8px; background:var(--ink); color:#fff; padding:11px 16px;
+  display:flex; align-items:center; gap:8px; background:var(--ink-solid); color:#fff; padding:11px 16px;
   border-radius:10px; font-size:13px; box-shadow:0 10px 24px rgba(0,0,0,0.25); animation:kasirToastIn .2s ease;
 }
 .kasir-toast svg{ width:16px; height:16px; color:var(--sage); flex-shrink:0; }
