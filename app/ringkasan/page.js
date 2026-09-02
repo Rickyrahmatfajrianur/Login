@@ -106,7 +106,9 @@ export default function RingkasanPage() {
   const [stats, setStats] = useState({
     totalProduk: 0, totalUnit: 0, aman: 0, menipis: 0, habis: 0,
     penjualanHariIni: 0, penjualanBulanIni: 0, pembelianBulanIni: 0, labaKotorBulanIni: 0,
+    penjualanBulanLalu: 0, pembelianBulanLalu: 0, labaKotorBulanLalu: 0,
   });
+  const [targets, setTargets] = useState({ penjualan: null, laba: null });
   const [restokTerbaru, setRestokTerbaru] = useState([]);
   const [penjualanTerbaru, setPenjualanTerbaru] = useState([]);
   const [perluDirestok, setPerluDirestok] = useState([]);
@@ -126,6 +128,10 @@ export default function RingkasanPage() {
     try {
       const settings = await fetchSettings(supabase);
       const minStok = settings?.stok_minimum ?? DEFAULT_STOK_MIN;
+      setTargets({
+        penjualan: settings?.target_penjualan_bulanan ?? null,
+        laba: settings?.target_laba_bulanan ?? null,
+      });
 
       const [stokRows, restokRows, penjualanRows] = await Promise.all([
         fetchCsvRows(CSV_URLS.stok),
@@ -226,6 +232,26 @@ export default function RingkasanPage() {
       const penjualanBulanIni = penjualanBulanIniList.reduce((s, p) => s + p.hargaAkhir, 0);
       const labaKotorBulanIni = penjualanBulanIniList.reduce((s, p) => s + p.profit, 0);
 
+      // Bulan lalu (buat bandingan badge naik/turun)
+      let lastMonth = curMonth - 1;
+      let lastMonthYear = curYear;
+      if (lastMonth < 0) {
+        lastMonth = 11;
+        lastMonthYear -= 1;
+      }
+      const penjualanBulanLaluList = penjualanList.filter((p) => {
+        const d = parseTanggalToDate(p.tanggal);
+        return d && d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+      });
+      const penjualanBulanLalu = penjualanBulanLaluList.reduce((s, p) => s + p.hargaAkhir, 0);
+      const labaKotorBulanLalu = penjualanBulanLaluList.reduce((s, p) => s + p.profit, 0);
+      const pembelianBulanLalu = restokList
+        .filter((r) => {
+          const d = parseTanggalToDate(r.tanggal);
+          return d && d.getMonth() === lastMonth && d.getFullYear() === lastMonthYear;
+        })
+        .reduce((s, r) => s + r.total, 0);
+
       // Produk paling laris (jumlah unit terjual, semua waktu)
       const produkTotal = {};
       penjualanList.forEach((p) => {
@@ -253,6 +279,7 @@ export default function RingkasanPage() {
       setStats({
         totalProduk, totalUnit, aman, menipis, habis,
         penjualanHariIni, penjualanBulanIni, pembelianBulanIni, labaKotorBulanIni,
+        penjualanBulanLalu, pembelianBulanLalu, labaKotorBulanLalu,
       });
       setRestokTerbaru(restokList.slice(-5).reverse());
       setPenjualanTerbaru(penjualanList.slice(-5).reverse());
@@ -339,6 +366,7 @@ export default function RingkasanPage() {
               <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
             </div>
             <div className="val small">{formatRupiah(stats.penjualanBulanIni)}</div>
+            <ChangeBadge now={stats.penjualanBulanIni} prev={stats.penjualanBulanLalu} />
           </div>
           <div className="stat-cell">
             <div className="cell-top">
@@ -346,6 +374,7 @@ export default function RingkasanPage() {
               <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M19 12l-7 7-7-7" /></svg>
             </div>
             <div className="val small">{formatRupiah(stats.pembelianBulanIni)}</div>
+            <ChangeBadge now={stats.pembelianBulanIni} prev={stats.pembelianBulanLalu} />
           </div>
           <div className="stat-cell profit">
             <div className="cell-top">
@@ -353,8 +382,37 @@ export default function RingkasanPage() {
               <svg className="cell-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
             </div>
             <div className="val small">{formatRupiah(stats.labaKotorBulanIni)}</div>
+            <ChangeBadge now={stats.labaKotorBulanIni} prev={stats.labaKotorBulanLalu} />
           </div>
         </div>
+      )}
+
+      {(targets.penjualan || targets.laba) && (
+        <>
+          <div className="section-lbl">Target Bulan Ini</div>
+          <div className="panel" style={{ marginBottom: 24 }}>
+            {targets.penjualan && (
+              <div className="goal-row">
+                <div className="goal-top">
+                  <span className="name">Target Penjualan</span>
+                  <span className="pct">{Math.min(100, Math.round((stats.penjualanBulanIni / targets.penjualan) * 100))}%</span>
+                </div>
+                <div className="goal-bar"><div className="goal-fill" style={{ width: Math.min(100, (stats.penjualanBulanIni / targets.penjualan) * 100) + "%" }}></div></div>
+                <div className="goal-sub"><span>{formatRupiah(stats.penjualanBulanIni)}</span><span>Target: {formatRupiah(targets.penjualan)}</span></div>
+              </div>
+            )}
+            {targets.laba && (
+              <div className="goal-row">
+                <div className="goal-top">
+                  <span className="name">Target Laba Kotor</span>
+                  <span className="pct">{Math.min(100, Math.round((stats.labaKotorBulanIni / targets.laba) * 100))}%</span>
+                </div>
+                <div className="goal-bar"><div className="goal-fill" style={{ width: Math.min(100, (stats.labaKotorBulanIni / targets.laba) * 100) + "%" }}></div></div>
+                <div className="goal-sub"><span>{formatRupiah(stats.labaKotorBulanIni)}</span><span>Target: {formatRupiah(targets.laba)}</span></div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <div className="section-lbl">Tren Penjualan</div>
@@ -556,6 +614,18 @@ export default function RingkasanPage() {
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function ChangeBadge({ now, prev }) {
+  if (!prev) return null; // belum ada data bulan lalu buat dibandingkan
+  const pct = ((now - prev) / prev) * 100;
+  const up = pct >= 0;
+  return (
+    <>
+      <span className={`change-badge ${up ? "up" : "down"}`}>{up ? "▲" : "▼"} {Math.abs(pct).toFixed(1)}%</span>
+      <span className="change-badge-vs">vs bulan lalu</span>
+    </>
   );
 }
 

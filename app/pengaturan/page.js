@@ -10,6 +10,7 @@ export default function PengaturanPage() {
     nama_toko: "", alamat: "", jam_operasional: "", whatsapp: "", metode_pembayaran: "", stok_minimum: 5, show_real_price: false,
     hero_heading: "", hero_lede: "", hero_typed_words: "",
     kasir_script_url: "", kasir_script_key: "",
+    target_penjualan_bulanan: "", target_laba_bulanan: "",
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -208,6 +209,8 @@ export default function PengaturanPage() {
         hero_typed_words: data.hero_typed_words || "",
         kasir_script_url: data.kasir_script_url || "",
         kasir_script_key: data.kasir_script_key || "",
+        target_penjualan_bulanan: data.target_penjualan_bulanan ?? "",
+        target_laba_bulanan: data.target_laba_bulanan ?? "",
       });
     } else {
       setMessage({ type: "error", text: "Tabel pengaturan belum ditemukan. Pastikan sudah menjalankan settings-schema.sql di Supabase." });
@@ -235,6 +238,8 @@ export default function PengaturanPage() {
         hero_typed_words: form.hero_typed_words,
         kasir_script_url: form.kasir_script_url,
         kasir_script_key: form.kasir_script_key,
+        target_penjualan_bulanan: form.target_penjualan_bulanan === "" ? null : parseFloat(form.target_penjualan_bulanan),
+        target_laba_bulanan: form.target_laba_bulanan === "" ? null : parseFloat(form.target_laba_bulanan),
       })
       .eq("id", 1);
 
@@ -292,6 +297,37 @@ export default function PengaturanPage() {
           <p style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 12, marginBottom: 0 }}>
             Status &quot;Habis&quot; selalu berlaku otomatis jika stok bernilai 0 atau kosong. Berlaku sama untuk semua produk.
           </p>
+        </div>
+
+        <div className="panel" style={{ marginBottom: 16 }}>
+          <div className="panel-head"><h3>🎯 Target Bulanan</h3></div>
+          <p style={{ fontSize: 12, color: "var(--ink-faint)", marginTop: 0, marginBottom: 14 }}>
+            Dipakai buat progress bar &quot;Target Bulan Ini&quot; di Dashboard. Ubah kapan saja sesuai target bulan berjalan.
+          </p>
+          <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+            <div className="field" style={{ flex: 1, minWidth: 220 }}>
+              <label>Target Penjualan Bulanan (Rp)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.target_penjualan_bulanan}
+                disabled={loading}
+                onChange={(e) => setForm({ ...form, target_penjualan_bulanan: e.target.value })}
+                placeholder="misal: 150000000"
+              />
+            </div>
+            <div className="field" style={{ flex: 1, minWidth: 220 }}>
+              <label>Target Laba Kotor Bulanan (Rp)</label>
+              <input
+                type="number"
+                min="0"
+                value={form.target_laba_bulanan}
+                disabled={loading}
+                onChange={(e) => setForm({ ...form, target_laba_bulanan: e.target.value })}
+                placeholder="misal: 10000000"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="panel" style={{ marginBottom: 16 }}>
