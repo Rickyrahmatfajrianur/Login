@@ -84,7 +84,7 @@ input, textarea, select{ font-family:inherit; }
 
 /* Ikon di dalam field (email & password) */
 .input-icon-wrap{ position:relative; }
-.input-icon-wrap input{ padding-left:40px; }
+.input-icon-wrap input{ width:100%; padding-left:40px; }
 .input-icon{
   position:absolute; left:13px; top:50%; transform:translateY(-50%);
   width:17px; height:17px; pointer-events:none;
