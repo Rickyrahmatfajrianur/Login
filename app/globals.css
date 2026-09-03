@@ -100,6 +100,7 @@ input, textarea, select{ font-family:inherit; }
   color:var(--slate400); border-radius:8px;
 }
 .btn-toggle-password:hover{ color:var(--slate600); background:var(--paper); }
+.btn-toggle-password:active{ transform:translateY(-50%) scale(0.94); }
 .btn-toggle-password svg{ width:18px; height:18px; }
 /* Toggle mata password khusus di kartu login butuh warna terang, beda dari dipakai di tempat lain */
 .login-card .btn-toggle-password{ color:rgba(255,255,255,0.7); }
@@ -168,6 +169,7 @@ input, textarea, select{ font-family:inherit; }
 }
 .sidebar-collapse-handle svg{ width:13px; height:13px; color:var(--slate500); }
 .sidebar-collapse-handle:hover{ background:var(--paper); }
+.sidebar-collapse-handle:active{ transform:translateY(-50%) scale(0.94); }
 .sidebar-collapse-handle.collapsed{ left:0; }
 @media (min-width:901px){
   .sidebar-collapse-handle{ display:flex; }
