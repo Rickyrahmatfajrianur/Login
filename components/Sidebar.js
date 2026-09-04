@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/stok-barang", key: "stok-barang", label: "Stok Barang", icon: "M20 7h-9M14 17H5M17 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM7 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" },
   { href: "/restok", key: "restok", label: "Stok Masuk", icon: "M12 5v14M19 12l-7 7-7-7" },
   { href: "/penjualan", key: "penjualan", label: "Stok Keluar / Penjualan", icon: "M12 19V5M5 12l7-7 7 7" },
+  { href: "/invoice", key: "invoice", label: "Invoice", icon: "M4 2a1 1 0 0 1 1 1v18l3-2 2 2 2-2 2 2 2-2 3 2V3a1 1 0 0 0-1-1zM8 7h8M8 11h8M8 15h4" },
   { href: "/supplier", key: "supplier", label: "Supplier", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
   { href: "/laporan", key: "laporan", label: "Laporan", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
   { href: "/pengaturan", key: "pengaturan", label: "Pengaturan", icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },

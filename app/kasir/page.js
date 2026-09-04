@@ -29,6 +29,7 @@ export default function KasirPage() {
 
   const [cart, setCart] = useState({}); // { [nama]: { harga, qty } }
   const [customer, setCustomer] = useState("");
+  const [customerWa, setCustomerWa] = useState("");
   const [discount, setDiscount] = useState("");
   const [payment, setPayment] = useState("");
 
@@ -119,6 +120,12 @@ export default function KasirPage() {
         });
         if (res.ok) {
           trx.status_sinkron = "tersinkron";
+          try {
+            const hasil = await res.json();
+            if (hasil?.no_invoice) trx.no_invoice = hasil.no_invoice;
+          } catch (e) {
+            // respons nggak ada JSON no_invoice-nya (misal transaksi void), biarin aja
+          }
           berubah = true;
         }
       } catch (err) {
@@ -199,7 +206,7 @@ export default function KasirPage() {
   const dibayarNum = Math.max(0, Number(payment) || 0);
   const kembalian = dibayarNum - total;
 
-  function selesaikanTransaksi() {
+  async function selesaikanTransaksi() {
     if (cartNames.length === 0) return;
 
     const items = cartNames.map((nama) => ({
@@ -214,11 +221,13 @@ export default function KasirPage() {
       id: "trx_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
       waktu: new Date().toISOString(),
       customer: customer.trim(),
+      customer_wa: customerWa.trim(),
       subtotal,
       diskon: diskonNum,
       total,
       uang_dibayar: dibayarNum,
       kembalian, // bisa negatif = kurang bayar, disimpan apa adanya (jangan dibulatkan ke 0)
+      status_toko: kembalian < 0 ? "KURANG BAYAR" : "LUNAS",
       status_sinkron: "belum_sinkron",
       items,
     };
@@ -238,9 +247,18 @@ export default function KasirPage() {
     setReceipt(trx);
     setCart({});
     setCustomer("");
+    setCustomerWa("");
     setDiscount("");
     setPayment("");
-    cobaSinkron();
+
+    await cobaSinkron();
+
+    // Kalau berhasil sinkron barusan (biasanya cuma sepersekian detik), nomor invoice-nya
+    // udah kebentuk -- update struk yang lagi ditampilkan (kalau usernya belum keburu tutup/ganti).
+    const trxTerbaru = getKasirTransactions().find((t) => t.id === trx.id);
+    if (trxTerbaru?.no_invoice) {
+      setReceipt((prev) => (prev && prev.id === trx.id ? { ...prev, no_invoice: trxTerbaru.no_invoice } : prev));
+    }
   }
 
   // ===== Riwayat (lokal, hari ini) =====
@@ -439,6 +457,9 @@ export default function KasirPage() {
               <input type="text" placeholder="Nama pelanggan (opsional)" value={customer} onChange={(e) => setCustomer(e.target.value)} />
             </div>
             <div className="field" style={{ marginTop: 8 }}>
+              <input type="text" placeholder="No. WA pelanggan (opsional)" value={customerWa} onChange={(e) => setCustomerWa(e.target.value)} />
+            </div>
+            <div className="field" style={{ marginTop: 8 }}>
               <input type="number" placeholder="Diskon" value={discount} onChange={(e) => setDiscount(e.target.value)} />
             </div>
 
@@ -552,17 +573,20 @@ export default function KasirPage() {
       {receipt && (
         <div className="modal-overlay">
           <div className="modal-card" style={{ maxWidth: 340 }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
+            <div className="no-print" style={{ display: "flex", justifyContent: "space-between", marginBottom: 14 }}>
               <h2 style={{ marginBottom: 0 }}>Struk</h2>
               <button onClick={() => setReceipt(null)} style={{ background: "none", border: "none", cursor: "pointer" }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 20, height: 20 }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
               </button>
             </div>
-            <div id="receipt-print" style={{ fontFamily: "monospace", fontSize: 12.5, lineHeight: 1.6 }}>
+            <div id="receipt-print" className="print-area" style={{ fontFamily: "monospace", fontSize: 12.5, lineHeight: 1.6 }}>
               <div style={{ textAlign: "center", fontWeight: 700 }}>TANIKU AGRO</div>
               <div style={{ textAlign: "center" }}>Ds. Rintik, Kec. Babulu, PPU</div>
               <hr />
               <div>{new Date(receipt.waktu).toLocaleDateString("id-ID")} {new Date(receipt.waktu).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</div>
+              <div>
+                No. Invoice: {receipt.no_invoice || <span style={{ color: "var(--ink-faint)" }}>(menunggu sinkron)</span>}
+              </div>
               {receipt.customer && <div>Pelanggan: {receipt.customer}</div>}
               <hr />
               {receipt.items.map((item, i) => (
@@ -587,7 +611,7 @@ export default function KasirPage() {
               <hr />
               <div style={{ textAlign: "center" }}>Terima kasih</div>
             </div>
-            <div className="modal-actions">
+            <div className="modal-actions no-print">
               <button className="btn-cancel" onClick={() => setReceipt(null)}>Tutup</button>
               <button className="btn-primary" onClick={cetakStruk}>Cetak Struk</button>
             </div>
