@@ -119,8 +119,9 @@ input, textarea, select{ font-family:inherit; }
 /* ===== Sidebar ===== */
 .dash-sidebar{
   width:264px; flex-shrink:0; background:linear-gradient(180deg, var(--ink-solid) 0%, #0D2540 100%);
-  color:#fff; display:flex; flex-direction:column; padding:26px 16px; position:sticky; top:0; height:100vh; overflow-y:auto;
-  transition:width .22s ease, padding .22s ease;
+  color:#fff; display:flex; flex-direction:column; padding:26px 16px; position:sticky; top:0; height:100vh;
+  overflow-y:auto; overflow-x:hidden;
+  transition:width .28s cubic-bezier(0.4,0,0.2,1), padding .28s cubic-bezier(0.4,0,0.2,1);
 }
 .sidebar-brand{ padding:4px 10px 28px; }
 .sidebar-brand img{ height:24px; filter:brightness(0) invert(1); }
@@ -128,7 +129,7 @@ input, textarea, select{ font-family:inherit; }
 .side-nav a{
   display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:10px;
   color:rgba(255,255,255,0.55); text-decoration:none; font-size:13.5px; font-weight:600;
-  transition:background .15s, color .15s; position:relative;
+  transition:background .15s, color .15s; position:relative; white-space:nowrap;
 }
 .side-nav a svg{ width:17px; height:17px; flex-shrink:0; opacity:0.85; }
 .side-nav a:hover{ color:rgba(255,255,255,0.85); }
@@ -145,15 +146,29 @@ input, textarea, select{ font-family:inherit; }
   display:flex; align-items:center; gap:9px; width:100%; margin-top:8px; padding:9px 10px;
   background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12); border-radius:10px;
   color:rgba(255,255,255,0.75); font-size:12.5px; font-weight:600; transition:background var(--t-fast), color var(--t-fast);
+  white-space:nowrap;
 }
 .theme-toggle-btn:hover{ background:rgba(255,255,255,0.1); color:#fff; }
 .theme-toggle-btn svg{ width:15px; height:15px; flex-shrink:0; }
 
 .btn-logout-sidebar{
   margin-top:8px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.12);
-  color:rgba(255,255,255,0.75); border-radius:10px; padding:9px; font-size:12.5px; font-weight:600;
+  color:rgba(255,255,255,0.75); border-radius:10px; padding:9px; font-size:12.5px; font-weight:600; white-space:nowrap;
 }
 .btn-logout-sidebar:hover{ background:rgba(255,255,255,0.1); color:#fff; }
+
+/* Isi sidebar (menu, brand, footer) dibikin memudar cepat -- supaya pas rel-nya nyusut,
+   yang keliatan itu konten yang udah hilang duluan, bukan teks yang kepotong di tengah kata. */
+.sidebar-brand, .side-nav, .sidebar-footer, .theme-toggle-btn, .btn-logout-sidebar{
+  opacity:1; transition:opacity .14s ease;
+}
+.dash-sidebar.desktop-collapsed .sidebar-brand,
+.dash-sidebar.desktop-collapsed .side-nav,
+.dash-sidebar.desktop-collapsed .sidebar-footer,
+.dash-sidebar.desktop-collapsed .theme-toggle-btn,
+.dash-sidebar.desktop-collapsed .btn-logout-sidebar{
+  opacity:0; transition:opacity .1s ease;
+}
 
 .sidebar-toggle{
   display:none; position:fixed; top:14px; left:14px; z-index:30; width:38px; height:38px; border-radius:10px;
