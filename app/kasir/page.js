@@ -486,7 +486,7 @@ export default function KasirPage() {
 
       {screen === "dashboard" && (
         <div>
-          <div className="stat-row" style={{ marginBottom: 20 }}>
+          <div className="stat-row">
             <div className="stat-cell">
               <div className="lbl">Transaksi</div>
               <div className="val">{todayActiveTrx.length}</div>

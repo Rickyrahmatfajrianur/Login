@@ -239,7 +239,7 @@ input, textarea, select{ font-family:inherit; }
 .setup-banner p{ font-size:12.5px; color:#9A7226; margin:0; line-height:1.55; }
 
 /* ===== Stat row (seamless, tanpa lingkaran ikon) ===== */
-.stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+.stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
 .stat-row.fin{ grid-template-columns:repeat(4,1fr); }
 .stat-row.cols-4{ grid-template-columns:repeat(4,1fr); }
 .stat-cell{
