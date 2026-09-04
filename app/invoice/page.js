@@ -279,7 +279,7 @@ export default function InvoicePage() {
     <DashboardLayout
       title="Invoice"
       headerRight={
-        <span className="no-print">
+        <>
           <span className="last-sync">{lastSync}</span>
           <button className={`btn-refresh ${refreshing ? "spinning" : ""}`} onClick={handleRefresh}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -291,7 +291,7 @@ export default function InvoicePage() {
           <button className="btn-primary" style={{ padding: "10px 16px" }} onClick={openForm}>
             + Buat Invoice
           </button>
-        </span>
+        </>
       }
     >
       <div className="no-print">
