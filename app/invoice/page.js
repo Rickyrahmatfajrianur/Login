@@ -12,6 +12,14 @@ function normalizeWa(nomor) {
   return digits.startsWith("0") ? "62" + digits.slice(1) : digits;
 }
 
+function itemFormKosong() {
+  return { nama: "", qty: "" };
+}
+
+function formKosong() {
+  return { customer: "", customerWa: "", status: "LUNAS", diskon: "", items: [itemFormKosong()] };
+}
+
 export default function InvoicePage() {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +30,16 @@ export default function InvoicePage() {
   const [selected, setSelected] = useState(null);
   const [toko, setToko] = useState({ nama_toko: "Taniku Agro", alamat: "", whatsapp: "" });
   const supabase = createClient();
+
+  // Form "+ Buat Invoice"
+  const [showForm, setShowForm] = useState(false);
+  const [scriptUrl, setScriptUrl] = useState("");
+  const [scriptKey, setScriptKey] = useState("");
+  const [daftarBarang, setDaftarBarang] = useState([]); // [{ nama, harga }]
+  const [form, setForm] = useState(formKosong());
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [toast, setToast] = useState("");
 
   async function loadToko() {
     try {
@@ -91,7 +109,128 @@ export default function InvoicePage() {
   useEffect(() => {
     loadData();
     loadToko();
+    loadDaftarBarang();
+    loadScriptSettings();
   }, []);
+
+  // Daftar barang + harga jual dari DAFTAR BARANG, buat autocomplete & auto-isi harga di form invoice.
+  async function loadDaftarBarang() {
+    try {
+      const rows = await fetchCsvRows(CSV_URLS.stok);
+      const headerIdx = findHeaderRow(rows, ["kode barang", "nama barang"]);
+      if (headerIdx === -1) return;
+      const header = rows[headerIdx].map((c) => (c || "").toString().trim().toLowerCase());
+      const idxNama = header.indexOf("nama barang");
+      const idxHarga = header.indexOf("harga jual");
+      if (idxNama === -1) return;
+
+      const list = [];
+      rows.slice(headerIdx + 1).forEach((r) => {
+        const nama = (r[idxNama] || "").toString().trim();
+        if (!nama) return;
+        list.push({ nama, harga: idxHarga > -1 ? parseAngkaIndonesia(r[idxHarga]) : 0 });
+      });
+      setDaftarBarang(list);
+    } catch (err) {
+      console.warn("Gagal memuat daftar barang:", err);
+    }
+  }
+
+  async function loadScriptSettings() {
+    try {
+      const { data: row } = await supabase.from("settings").select("kasir_script_url, kasir_script_key").eq("id", 1).single();
+      if (row) {
+        setScriptUrl(row.kasir_script_url || "");
+        setScriptKey(row.kasir_script_key || "");
+      }
+    } catch (err) {
+      console.warn("Gagal memuat pengaturan script:", err);
+    }
+  }
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  function openForm() {
+    setForm(formKosong());
+    setFormError("");
+    setShowForm(true);
+  }
+
+  function updateItem(idx, field, value) {
+    setForm((prev) => {
+      const items = prev.items.slice();
+      items[idx] = { ...items[idx], [field]: value };
+      return { ...prev, items };
+    });
+  }
+
+  function addItemRow() {
+    setForm((prev) => ({ ...prev, items: [...prev.items, itemFormKosong()] }));
+  }
+
+  function removeItemRow(idx) {
+    setForm((prev) => {
+      if (prev.items.length <= 1) return prev;
+      return { ...prev, items: prev.items.filter((_, i) => i !== idx) };
+    });
+  }
+
+  function hargaUntuk(nama) {
+    const produk = daftarBarang.find((p) => p.nama.toLowerCase() === nama.trim().toLowerCase());
+    return produk ? produk.harga : 0;
+  }
+
+  const formItemsValid = form.items
+    .map((it) => ({ nama_produk: it.nama.trim(), qty: parseFloat(it.qty), harga: hargaUntuk(it.nama) }))
+    .filter((it) => it.nama_produk && it.qty > 0);
+  const formSubtotal = formItemsValid.reduce((s, it) => s + it.harga * it.qty, 0);
+  const formDiskon = Math.max(0, Number(form.diskon) || 0);
+  const formTotal = Math.max(0, formSubtotal - formDiskon);
+
+  async function handleSubmitForm(e) {
+    e.preventDefault();
+    setFormError("");
+
+    if (!scriptUrl || !scriptKey) {
+      setFormError("URL/Key Google Apps Script belum diisi di halaman Pengaturan.");
+      return;
+    }
+    if (formItemsValid.length === 0) {
+      setFormError("Isi minimal 1 barang dengan Nama dan Qty yang valid.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch(scriptUrl, {
+        method: "POST",
+        body: JSON.stringify({
+          key: scriptKey,
+          waktu: new Date().toISOString(),
+          customer: form.customer.trim(),
+          customer_wa: form.customerWa.trim(),
+          status: form.status,
+          diskon: formDiskon,
+          items: formItemsValid.map((it) => ({ nama_produk: it.nama_produk, qty: it.qty })),
+        }),
+      });
+      const result = await res.json();
+      if (result?.error) throw new Error(result.error);
+
+      setShowForm(false);
+      setToast(`Invoice ${result.no_invoice || ""} berhasil dibuat.`);
+      await loadData();
+    } catch (err) {
+      console.warn("Gagal membuat invoice:", err);
+      setFormError("Gagal menyimpan ke spreadsheet. Cek koneksi internet lalu coba lagi.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   async function handleRefresh() {
     setRefreshing(true);
@@ -149,10 +288,30 @@ export default function InvoicePage() {
             </svg>
             Refresh
           </button>
+          <button className="btn-primary" style={{ padding: "10px 16px" }} onClick={openForm}>
+            + Buat Invoice
+          </button>
         </span>
       }
     >
       <div className="no-print">
+        {toast && (
+          <div className="setup-banner" style={{ display: "flex", background: "var(--sage-soft)", border: "1px solid var(--sage)", marginBottom: 16 }}>
+            <div className="setup-ic">✅</div>
+            <div><b style={{ color: "var(--sage)" }}>{toast}</b></div>
+          </div>
+        )}
+
+        {(!scriptUrl || !scriptKey) && (
+          <div className="setup-banner" style={{ display: "flex", background: "#FFF3E0", border: "1px solid #FFD8A8", marginBottom: 16 }}>
+            <div className="setup-ic">⚠️</div>
+            <div>
+              <b style={{ color: "var(--brand-deep)" }}>URL/Key Apps Script belum diisi</b>
+              <p style={{ color: "var(--brand-deep)" }}>Isi dulu di halaman Pengaturan supaya tombol &quot;+ Buat Invoice&quot; bisa menyimpan ke spreadsheet.</p>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <SkeletonStatRow count={3} />
         ) : (
@@ -279,6 +438,98 @@ export default function InvoicePage() {
               )}
               <button className="btn-primary" onClick={handlePrint}>Cetak / PDF</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showForm && (
+        <div className="modal-overlay no-print" onClick={() => setShowForm(false)}>
+          <div className="modal-card" style={{ maxWidth: 640 }} onClick={(e) => e.stopPropagation()}>
+            <h2>+ Buat Invoice</h2>
+
+            <form className="modal-form" onSubmit={handleSubmitForm}>
+              {formError && <div className="error-msg">{formError}</div>}
+
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div className="field" style={{ flex: 1, minWidth: 180 }}>
+                  <label>Nama Pelanggan</label>
+                  <input type="text" placeholder="Nama pelanggan" value={form.customer} onChange={(e) => setForm({ ...form, customer: e.target.value })} />
+                </div>
+                <div className="field" style={{ flex: 1, minWidth: 180 }}>
+                  <label>No. WA Pelanggan (opsional)</label>
+                  <input type="text" placeholder="08xxxxxxxxxx" value={form.customerWa} onChange={(e) => setForm({ ...form, customerWa: e.target.value })} />
+                </div>
+                <div className="field" style={{ flex: 1, minWidth: 140 }}>
+                  <label>Status Bayar</label>
+                  <select
+                    value={form.status}
+                    onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    style={{ border: "1.5px solid var(--slate200)", borderRadius: 10, padding: "11px 13px", fontSize: 14 }}
+                  >
+                    <option value="LUNAS">Lunas</option>
+                    <option value="KURANG BAYAR">Kurang Bayar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: "var(--slate600)" }}>Barang</label>
+                <datalist id="daftar-nama-barang-invoice">
+                  {daftarBarang.map((p) => (
+                    <option key={p.nama} value={p.nama} />
+                  ))}
+                </datalist>
+
+                {form.items.map((item, idx) => {
+                  const harga = hargaUntuk(item.nama);
+                  const qtyNum = parseFloat(item.qty) || 0;
+                  return (
+                    <div key={idx} style={{ display: "flex", gap: 8, alignItems: "flex-end", marginTop: 10, flexWrap: "wrap" }}>
+                      <div className="field" style={{ flex: 3, minWidth: 160 }}>
+                        {idx === 0 && <label>Nama Barang</label>}
+                        <input
+                          type="text"
+                          list="daftar-nama-barang-invoice"
+                          placeholder="Ketik nama barang..."
+                          value={item.nama}
+                          onChange={(e) => updateItem(idx, "nama", e.target.value)}
+                        />
+                      </div>
+                      <div className="field" style={{ flex: 1, minWidth: 80 }}>
+                        {idx === 0 && <label>Qty</label>}
+                        <input type="number" min="0" placeholder="0" value={item.qty} onChange={(e) => updateItem(idx, "qty", e.target.value)} />
+                      </div>
+                      <div className="field" style={{ flex: 1.4, minWidth: 120 }}>
+                        {idx === 0 && <label>Subtotal</label>}
+                        <input type="text" disabled value={harga && qtyNum ? formatRupiah(harga * qtyNum) : "-"} />
+                      </div>
+                      <button type="button" className="btn-delete" onClick={() => removeItemRow(idx)} disabled={form.items.length <= 1} style={{ height: 44 }} title="Hapus baris ini">✕</button>
+                    </div>
+                  );
+                })}
+
+                <button type="button" onClick={addItemRow} className="btn-cancel" style={{ marginTop: 10, padding: "8px 14px" }}>
+                  + Tambah Baris Barang
+                </button>
+              </div>
+
+              <div className="field" style={{ marginTop: 14, maxWidth: 200 }}>
+                <label>Diskon (Rp, opsional)</label>
+                <input type="number" min="0" placeholder="0" value={form.diskon} onChange={(e) => setForm({ ...form, diskon: e.target.value })} />
+              </div>
+
+              <div className="invoice-total-row grand" style={{ marginTop: 10 }}>
+                <span>TOTAL</span>
+                <span>{formatRupiah(formTotal)}</span>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-cancel" onClick={() => setShowForm(false)}>Batal</button>
+                <button type="submit" className="btn-primary" disabled={submitting}>
+                  {submitting ? "Menyimpan..." : "Simpan Invoice"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
