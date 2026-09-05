@@ -318,6 +318,8 @@ tbody tr:hover{ background:var(--brand-soft); }
 .search-box{ display:flex; align-items:center; gap:8px; background:var(--paper); border:1.5px solid var(--line); border-radius:10px; padding:0 12px; min-width:200px; }
 .search-box svg{ width:15px; height:15px; color:var(--ink-faint); flex-shrink:0; }
 .search-box input{ border:none; background:transparent; outline:none; padding:9px 0; font-size:13px; width:100%; }
+select{ background:var(--card); color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:9px 13px; font-size:13px; font-family:inherit; }
+select option{ background:var(--card); color:var(--ink); }
 select#filterStatus{ border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; font-size:13px; color:var(--ink-soft); background:var(--card); }
 
 /* ===== Grid layout kombinasi panel ===== */
