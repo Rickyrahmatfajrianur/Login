@@ -398,19 +398,27 @@ export default function InvoicePage() {
             </div>
 
             <div className="print-area">
-              <div className="invoice-detail-head">
-                <b>{toko.nama_toko || "Taniku Agro"}</b>
-                <span>{toko.alamat}</span>
-                {toko.whatsapp && <span>WhatsApp: {toko.whatsapp}</span>}
+              <div className="invoice-a-top">
+                <div className="invoice-a-brand">
+                  <b>{toko.nama_toko || "Taniku Agro"}</b>
+                  <div className="storeinfo">
+                    {toko.alamat}
+                    {toko.whatsapp && <><br />WhatsApp: {toko.whatsapp}</>}
+                  </div>
+                </div>
+                <div className="invoice-a-title">
+                  <h1>INVOICE</h1>
+                  <div className="no">{selected.noInvoice}</div>
+                  <span className={`invoice-a-badge ${isLunas(selected.status) ? "lunas" : "kurang"}`}>
+                    {isLunas(selected.status) ? "LUNAS" : "KURANG BAYAR"}
+                  </span>
+                </div>
               </div>
-              <div className="invoice-meta-row"><span>No. Invoice</span><b>{selected.noInvoice}</b></div>
-              <div className="invoice-meta-row"><span>Tanggal</span><span>{formatTanggal(selected.tanggal)}</span></div>
-              {selected.customer && <div className="invoice-meta-row"><span>Pelanggan</span><span>{selected.customer}</span></div>}
+
               <div className="invoice-meta-row">
-                <span>Status</span>
-                <span style={{ color: isLunas(selected.status) ? "var(--sage)" : "var(--rust)", fontWeight: 700 }}>
-                  {isLunas(selected.status) ? "Lunas" : "Kurang Bayar"}
-                </span>
+                <div><b>Tanggal</b>{formatTanggal(selected.tanggal)}</div>
+                {selected.customer && <div><b>Pelanggan</b>{selected.customer}</div>}
+                {selected.customerWa && <div><b>No. WA</b>{selected.customerWa}</div>}
               </div>
 
               <table className="invoice-table">
@@ -428,7 +436,11 @@ export default function InvoicePage() {
                 </tbody>
               </table>
 
-              <div className="invoice-total-row grand"><span>TOTAL</span><span>{formatRupiah(selected.total)}</span></div>
+              <div className="invoice-totals">
+                <div className="invoice-total-row grand"><span>TOTAL</span><span>{formatRupiah(selected.total)}</span></div>
+              </div>
+
+              <div className="invoice-a-footer">Terima kasih sudah berbelanja di {toko.nama_toko || "Taniku Agro"} 🌱</div>
             </div>
 
             <div className="modal-actions no-print">
