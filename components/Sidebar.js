@@ -8,16 +8,16 @@ import { hasAccess } from "@/lib/permissions";
 import ThemeToggle from "./ThemeToggle";
 
 const NAV_ITEMS = [
-  { href: "/ringkasan", key: "ringkasan", label: "Dashboard", icon: "M3 3h7v9H3zM14 3h7v5h-7zM14 12h7v9h-7zM3 16h7v5H3z" },
-  { href: "/kasir", key: "kasir", label: "Kasir", icon: "M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4ZM3 6h18M16 10a4 4 0 0 1-8 0" },
-  { href: "/produk", key: "produk", label: "Master Produk", icon: "M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" },
-  { href: "/stok-barang", key: "stok-barang", label: "Stok Barang", icon: "M20 7h-9M14 17H5M17 17a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM7 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" },
-  { href: "/restok", key: "restok", label: "Stok Masuk", icon: "M12 5v14M19 12l-7 7-7-7" },
-  { href: "/penjualan", key: "penjualan", label: "Stok Keluar / Penjualan", icon: "M12 19V5M5 12l7-7 7 7" },
-  { href: "/invoice", key: "invoice", label: "Invoice", icon: "M4 2a1 1 0 0 1 1 1v18l3-2 2 2 2-2 2 2 2-2 3 2V3a1 1 0 0 0-1-1zM8 7h8M8 11h8M8 15h4" },
-  { href: "/supplier", key: "supplier", label: "Supplier", icon: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" },
-  { href: "/laporan", key: "laporan", label: "Laporan", icon: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" },
-  { href: "/pengaturan", key: "pengaturan", label: "Pengaturan", icon: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
+  { href: "/ringkasan", key: "ringkasan", label: "Dashboard", icon: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2" opacity="0.45"/><rect x="3" y="13" width="8" height="8" rx="2" opacity="0.45"/><rect x="13" y="13" width="8" height="8" rx="2"/>' },
+  { href: "/kasir", key: "kasir", label: "Kasir", icon: '<path d="M4.5 8h15l-1.4 11.3A2 2 0 0 1 16.13 21H7.87a2 2 0 0 1-1.97-1.7L4.5 8Z"/><path d="M8.5 8V6.5a3.5 3.5 0 0 1 7 0V8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>' },
+  { href: "/produk", key: "produk", label: "Master Produk", icon: '<rect x="3" y="3" width="18" height="18" rx="4"/>' },
+  { href: "/stok-barang", key: "stok-barang", label: "Stok Barang", icon: '<rect x="4" y="3" width="16" height="7.5" rx="2"/><rect x="4" y="13.5" width="16" height="7.5" rx="2" opacity="0.45"/>' },
+  { href: "/restok", key: "restok", label: "Stok Masuk", icon: '<path d="M11 3h2v7h3.3L12 15.5 7.7 10H11V3Z"/><rect x="5" y="19" width="14" height="2" rx="1"/>' },
+  { href: "/penjualan", key: "penjualan", label: "Stok Keluar / Penjualan", icon: '<path d="M13 21h-2v-7H7.7L12 8.5l4.3 5.5H13V21Z"/><rect x="5" y="3" width="14" height="2" rx="1"/>' },
+  { href: "/invoice", key: "invoice", label: "Invoice", icon: '<rect x="7" y="2" width="10" height="20" rx="2"/>' },
+  { href: "/supplier", key: "supplier", label: "Supplier", icon: '<rect x="2" y="9" width="13" height="8" rx="1.5"/><path d="M15 11h3.5l2.5 3v3h-6v-6Z"/><circle cx="6.5" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>' },
+  { href: "/laporan", key: "laporan", label: "Laporan", icon: '<rect x="4" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="18" rx="1"/>' },
+  { href: "/pengaturan", key: "pengaturan", label: "Pengaturan", icon: '<rect x="3" y="6" width="18" height="2" rx="1"/><circle cx="8" cy="7" r="2.5"/><rect x="3" y="16" width="18" height="2" rx="1"/><circle cx="16" cy="17" r="2.5"/>' },
 ];
 
 export default function Sidebar() {
@@ -98,9 +98,7 @@ export default function Sidebar() {
               className={pathname === item.href ? "active" : ""}
               onClick={() => setOpen(false)}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d={item.icon} />
-              </svg>
+              <svg viewBox="0 0 24 24" fill="currentColor" dangerouslySetInnerHTML={{ __html: item.icon }} />
               {item.label}
             </Link>
           ))}
