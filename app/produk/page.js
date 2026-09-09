@@ -58,6 +58,7 @@ export default function ProdukPage() {
   const [catFilter, setCatFilter] = useState("semua");
   const [selectedIds, setSelectedIds] = useState([]);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
@@ -358,11 +359,24 @@ export default function ProdukPage() {
                     <td>{p.updated_at ? new Date(p.updated_at).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }) : "-"}</td>
                     <td>
                       <div className="row-menu-wrap">
-                        <button className="btn-dots" onClick={() => setOpenMenuId(openMenuId === p.id ? null : p.id)}>⋯</button>
+                        <button
+                          className="btn-dots"
+                          onClick={(e) => {
+                            if (openMenuId === p.id) {
+                              setOpenMenuId(null);
+                              return;
+                            }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setMenuPos({ top: rect.bottom + 4, left: rect.right - 140 }); // 140 = lebar minimum .row-menu
+                            setOpenMenuId(p.id);
+                          }}
+                        >
+                          ⋯
+                        </button>
                         {openMenuId === p.id && (
                           <>
                             <div className="row-menu-overlay" onClick={() => setOpenMenuId(null)} />
-                            <div className="row-menu">
+                            <div className="row-menu" style={{ top: menuPos.top, left: menuPos.left }}>
                               <button onClick={() => openEditModal(p)}>Edit</button>
                               <button onClick={() => handleToggleHidden(p)}>{p.is_hidden ? "Tampilkan" : "Sembunyikan"}</button>
                               <button className="danger" onClick={() => handleDelete(p.id)}>Hapus</button>
