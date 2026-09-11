@@ -158,6 +158,23 @@ input, textarea{ background:var(--card); color:var(--ink); }
 }
 .btn-logout-sidebar:hover{ background:rgba(255,255,255,0.1); color:#fff; }
 
+/* Tema terang: sidebar ikut jadi putih/senada konten, bukan selalu gelap.
+   Tema gelap tetap pakai gradient gelap di atas (nggak disentuh). */
+[data-theme="light"] .dash-sidebar{ background:var(--card); border-right:1px solid var(--line); }
+[data-theme="light"] .sidebar-brand img{ filter:none; }
+[data-theme="light"] .side-nav a{ color:var(--ink-faint); }
+[data-theme="light"] .side-nav a:hover{ color:var(--ink); }
+[data-theme="light"] .side-nav a.active{ background:var(--brand-soft); color:var(--brand); }
+[data-theme="light"] .side-nav a.active::before{ background:var(--brand); }
+[data-theme="light"] .side-nav a svg{ opacity:0.75; }
+[data-theme="light"] .side-nav a.active svg{ opacity:1; }
+[data-theme="light"] .sidebar-footer{ border-top:1px solid var(--line); }
+[data-theme="light"] .sidebar-footer .txt span{ color:var(--ink-faint); }
+[data-theme="light"] .theme-toggle-btn{ background:var(--paper); border:1px solid var(--line); color:var(--ink-soft); }
+[data-theme="light"] .theme-toggle-btn:hover{ background:var(--line); color:var(--ink); }
+[data-theme="light"] .btn-logout-sidebar{ background:var(--paper); border:1px solid var(--line); color:var(--ink-soft); }
+[data-theme="light"] .btn-logout-sidebar:hover{ background:var(--line); color:var(--ink); }
+
 /* Isi sidebar (menu, brand, footer) dibikin memudar cepat -- supaya pas rel-nya nyusut,
    yang keliatan itu konten yang udah hilang duluan, bukan teks yang kepotong di tengah kata. */
 .sidebar-brand, .side-nav, .sidebar-footer, .theme-toggle-btn, .btn-logout-sidebar{
